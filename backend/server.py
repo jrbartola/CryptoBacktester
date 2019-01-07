@@ -61,8 +61,10 @@ class Server(object):
         self.add_endpoint(endpoint='/backtest', endpoint_name='backtest', methods=['POST'], handler=backtesting_action)
         self.add_endpoint(endpoint='/pairs', endpoint_name='pairs', handler=pairs_action)
 
-    def run(self, debug=True):
-        self.app.run(debug=debug, host='0.0.0.0', port=5000)
+    def run(self, debug=False):
+        import os
+        port = int(os.environ.get('PORT', 5000))
+        self.app.run(debug=debug, host='0.0.0.0', port=port)
 
     def add_endpoint(self, endpoint=None, endpoint_name=None, methods=['GET'], handler=None):
         self.app.add_url_rule(endpoint, endpoint_name, EndpointAction(handler), methods=methods)
