@@ -28419,7 +28419,7 @@ var Dashboard = function (_React$Component) {
         value: function getMarketPairs() {
             var _this2 = this;
 
-            var url = "http://localhost:5000/pairs";
+            var url = window.location.origin + '/pairs';
 
             $.get(url, function (data, _, err) {
                 if (err.status === 200) {
@@ -28447,7 +28447,7 @@ var Dashboard = function (_React$Component) {
         value: function getBacktestingData(coinPair, timeUnit, capital, startTime, stopLoss, buyStrategy, sellStrategy, indicators) {
             var _this3 = this;
 
-            var url = "http://localhost:5000/backtest?pair=" + coinPair + "&period=" + timeUnit + "&capital=" + capital + "&stopLoss=" + stopLoss + "&startTime=" + startTime;
+            var url = window.location.origin + '/backtest?pair=' + coinPair + '&period=' + timeUnit + '$\n                    &capital=' + capital + '&stopLoss=' + stopLoss + '&startTime=' + startTime;
 
             var target = document.getElementById('d3plot');
             var spinner = new _spin.Spinner(this.spinnerOpts).spin(target);
