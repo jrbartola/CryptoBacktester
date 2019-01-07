@@ -34,7 +34,7 @@ class BacktestingStrategy(object):
         # The zero's are to take up space since our indicators require a full dataframe of OHLC datas
         self.prices = [[0, 0, 0, 0, sample_price(candle.open, candle.close), 0] for candle in candlesticks]
 
-        # Hacky way to ensure indices match up :/
+        # Hacky way to ensure indices match up :(
         rsi = [None] * 14
         nine_period = [None] * 9
         fifteen_period = [None] * 15
