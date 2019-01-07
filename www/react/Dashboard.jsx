@@ -75,7 +75,7 @@ class Dashboard extends React.Component {
      *
      */
     getMarketPairs() {
-        const url = "http://localhost:5000/pairs";
+        const url = `${window.location.origin}/pairs`;
 
         $.get(url, (data, _, err) => {
             if (err.status === 200) {
@@ -100,8 +100,8 @@ class Dashboard extends React.Component {
      */
 	getBacktestingData(coinPair, timeUnit, capital, startTime, stopLoss, buyStrategy, sellStrategy, indicators) {
 
-	    const url = "http://localhost:5000/backtest?pair=" + coinPair + "&period=" + timeUnit +
-                    "&capital=" + capital + "&stopLoss=" + stopLoss + "&startTime=" + startTime;
+	    const url = `${window.location.origin}/backtest?pair=${coinPair}&period=${timeUnit}$
+                    &capital=${capital}&stopLoss=${stopLoss}&startTime=${startTime}`;
 
 	    const target = document.getElementById('d3plot');
         const spinner = new Spinner(this.spinnerOpts).spin(target);
