@@ -1,8 +1,3 @@
-import json
-from time import time
-
-import matplotlib.pyplot as plt
-
 from analysis import StrategyAnalyzer
 from candlestick import Candlestick
 
@@ -111,48 +106,3 @@ class Chart(object):
                                                  enumerate(self.indicators.analyze_sma(closings, period_count=period, all_data=True))]
 
         return response
-
-    '''
-    ####################################################################
-    ### THIS FUNCTION IS DEPRECATED. PLOT IS NOW DISPLAYED ON THE UI ###
-    ####################################################################
-    
-    Plots the specified indicators on a matplotlib plot
-    '''
-    def plot_indicators(self, **kwargs):
-        import numpy as np
-
-        # Get closing historical datapoints
-        closings = [[0, 0, 0, 0, x.close, 0] for x in self.data]
-        plt.plot([x.close for x in self.data])
-
-        # The 'bollinger' keyword argument takes in a period, i.e. bollinger=21
-        if "bollinger" in kwargs:
-            period = kwargs["bollinger"]
-            assert type(period) is int
-
-            bbupper = [np.nan_to_num(datum["values"][0]) for datum in self.indicators.analyze_bollinger_bands(closings, all_data=True)]
-            bblower = [np.nan_to_num(datum["values"][2]) for datum in self.indicators.analyze_bollinger_bands(closings, all_data=True)]
-            plt.plot(np.arange(period, len(closings)), bbupper[period:], 'g--')
-            plt.plot(np.arange(period, len(closings)), bblower[period:], 'b--')
-
-        # The 'sma' keyword argument takes in a list of periods, i.e. sma=[9,15,21]
-        if "sma" in kwargs:
-            periods = kwargs["sma"]
-            assert type(periods) is list
-
-            for period in periods:
-                plt.plot([np.nan_to_num(datum["values"][0]) for datum in self.indicators.analyze_sma(closings, period_count=period, all_data=True)])
-
-    '''
-    Plots each buy trade as a green 'x', and each sell trade as a red 'x'
-    '''
-    def plot_trades(self, buys, sells):
-        for timestamp, price in buys:
-            plt.plot(timestamp, price, 'gx')
-
-        for timestamp, price in sells:
-            plt.plot(timestamp, price, 'rx')
-
-
-
