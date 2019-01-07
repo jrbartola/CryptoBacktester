@@ -1,6 +1,9 @@
-import React from 'react';
+import * as React from 'react';
 
-class Navbar extends React.Component {
+interface NavProps {}
+interface NavState {}
+
+export class Navbar extends React.Component<NavProps, NavState> {
 	constructor(props) {
 		super(props);
 
@@ -15,7 +18,4 @@ class Navbar extends React.Component {
             </nav>
 		)
 	}
-
 }
-
-export default Navbar;
