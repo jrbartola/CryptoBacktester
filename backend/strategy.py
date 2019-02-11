@@ -21,44 +21,26 @@ class BacktestingStrategy(object):
         self.trading_fee = trading_fee
         self.stop_loss = stop_loss
 
-    def run(self, candlesticks):
+    def run(self, candlesticks, indicators):
         """
         Runs our backtesting strategy on the set of candlestick data
 
         Args:
             candlesticks (list[Candlestick]): A list of candlestick objects
+            indicators (dict[str, -]): A dictionary mapping indicator strings to their data points
         """
-
-        # Samples a random price within the range [candlestick.open, candlestick.close]
-        sample_price = lambda op, close: random.uniform(min(op, close), max(op, close))
 
         # The zero's are to take up space since our indicators require a full dataframe of OHLC datas
         self.prices = [[candle.time, 0, 0, 0, candle.close, 0] for candle in candlesticks]
-
-        # Hacky way to ensure indices match up :(
-        rsi = [None] * 14
-        nine_period = [None] * 9
-        fifteen_period = [None] * 15
-        nine_period_ema = [None] * 9
-
-        rsi.extend(self.indicators.analyze_rsi(self.prices, period_count=14, all_data=True))
-        nine_period.extend(self.indicators.analyze_sma(self.prices, period_count=9, all_data=True))
-        fifteen_period.extend(self.indicators.analyze_sma(self.prices, period_count=15, all_data=True))
-        nine_period_ema.extend(self.indicators.analyze_ema(self.prices, period_count=9, all_data=True))
-
 
         for i in range(len(self.prices)):
 
             # Get the (sampled) closing price
             current_price = self.prices[i][4]
             current_time = self.prices[i][0]
-            current_rsi = rsi[i]["values"] if rsi[i] else None
-            current_nine_period = nine_period[i]["values"] if nine_period[i] else None
-            current_fifteen_period = fifteen_period[i]["values"] if fifteen_period[i] else None
-            current_nine_period_ema = nine_period_ema[i]["values"] if nine_period_ema[i] else None
 
-            decision = Decision({'currentprice': current_price, 'rsi': current_rsi, 'sma-9': current_nine_period,
-                                 'sma-15': current_fifteen_period, 'ema-9': current_nine_period_ema})
+            indicator_datum = {ind : indicators[ind][i][1] for ind in indicators}
+            decision = Decision({'currentprice': current_price, **indicator_datum})
 
             open_trades = [trade for trade in self.trades if trade.status == 'OPEN']
 

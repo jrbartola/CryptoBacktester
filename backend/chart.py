@@ -65,30 +65,43 @@ class Chart(object):
         except IndexError:
             raise ValueError("`Period` string should contain a character prefixed with an integer")
 
-    def get_indicators(self, indicators):
+    def get_indicators(self, indicators, start_time):
         """
         Returns the indicators specified in the input list as a json-serializable dictionary
 
         Args:
             indicators (list[str]): A list of strings where each string is a JSON representation of an indicator
+            start_time (int): The earliest data point to consider, in epoch milliseconds
         Returns:
             dict[str, -]: A response dictionary mapping JSON indicator names to their data points
         """
         import re
 
+        start_time = start_time if start_time else 0
         response = {}
 
         # Get closing historical datapoints
-        closings = [[x.time, 0, 0, 0, x.close, 0] for x in self.data]
+        closings = [[x.time, 0, 0, 0, x.close, 0] for x in self.get_points(start_time)]
 
         for indicator in indicators:
+
+            # Simple Moving Averages
             if re.fullmatch('sma-\d+', indicator):
                 period = int(indicator[indicator.find('-') + 1:])
 
-                response[indicator] = [(closings[i + period-1][0], datum["values"][0]) for i, datum in
-                                                 enumerate(self.indicators.analyze_sma(closings, period_count=period,
-                                                                                       all_data=True))]
+                response[indicator] = [(closings[i][0], None) for i in range(period)] + \
+                                      [(closings[i + period-1][0], datum["values"][0]) for i, datum in
+                                       enumerate(self.indicators.analyze_sma(closings, period_count=period, all_data=True))]
 
+            # RSIs
+            if re.fullmatch('rsi-\d+', indicator):
+                period = int(indicator[indicator.find('-') + 1:])
+
+                response[indicator] = [(closings[i][0], None) for i in range(period)] + \
+                                      [(closings[i + period - 1][0], datum["values"][0]) for i, datum in
+                                       enumerate(self.indicators.analyze_rsi(closings, period_count=period, all_data=True))]
+
+            # Bollinger Bands
             if re.fullmatch('bollinger-\d+-\d+', indicator):
                 period, std_dev = [int(m) for m in re.findall('\d+', indicator)]
 

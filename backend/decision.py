@@ -25,14 +25,11 @@ class Decision(object):
         """
 
         for indicator, body in buy_strategy.items():
-            comparator, value = body['comparator'], body['value']
+            comparator, value = body['comparator'], self.indicators[body['value']]
 
-            if not isinstance(value, (int, float)):
-                try:
-                    value = self.indicators[value][0]
-                # Exception gets thrown if we have a None value for our indicator, due to insufficient data
-                except TypeError:
-                    return False
+            # Return False if we have insufficient data
+            if value is None:
+                return False
 
             if comparator == '<':
                 if self.indicators[indicator] >= value:
@@ -67,14 +64,10 @@ class Decision(object):
         """
 
         for indicator, body in sell_strategy.items():
-            comparator, value = body['comparator'], body['value']
+            comparator, value = body['comparator'], self.indicators[body['value']]
 
-            if not isinstance(value, (int, float)):
-                try:
-                    value = self.indicators[value][0]
-                # Exception gets thrown if we have a None value for our indicator, due to insufficient data
-                except TypeError:
-                    return False
+            if value is None:
+                return False
 
             if comparator == '<':
                 if self.indicators[indicator] >= value:
