@@ -18,7 +18,7 @@ export class CoinPane extends React.Component<CoinProps, CoinState> {
 
     render() {
         return (
-            <div className="card-body strategy-container">
+            <div className="card-body">
                 <div className="row">
                  <div className="input-field col-md-6">
                  <select value={this.props.selectedPair} id="coin-pair" className="form-control"
@@ -50,6 +50,7 @@ export class CoinPane extends React.Component<CoinProps, CoinState> {
                      <DatePicker
                         selected={this.props.startTime}
                         onChange={(date) => this.props.updateCoinState({startTime: date})}
+                        maxDate={new Date()}
                         />
                    <label className="active" htmlFor="start-time">Start Time</label>
                  </div>

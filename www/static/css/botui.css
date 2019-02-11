@@ -22,7 +22,9 @@ nav {
   float: right; }
 
 .strategy-container {
-  max-height: 400px; }
+  max-height: 400px;
+  overflow: auto;
+}
 
 .card-container {
   display: flex;
@@ -42,8 +44,12 @@ nav {
 
 .add-remove-btn {
   display: inline-block;
-  color: white;
+  color: white !important;
   border-radius: 50%;
+}
+
+#start-btn {
+  color: white;
 }
 
 

@@ -7,7 +7,9 @@ import { BacktestData } from "./types/conditions";
 interface PlotProps { backtestData: BacktestData[], shownIndicators: Set<string> }
 interface PlotState {}
 
-
+/**
+ * Defines the cartesian plot under the control panel, displaying closing prices and indicators
+ */
 export class Plot extends React.Component<PlotProps, PlotState> {
     constructor(props) {
         super(props);

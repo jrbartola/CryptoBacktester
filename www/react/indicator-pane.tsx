@@ -13,7 +13,6 @@ export class IndicatorPane extends React.Component<IndicatorProps, IndicatorStat
         this.addRemoveCheck = this.addRemoveCheck.bind(this);
     }
 
-
     /**
      * Adds or removes a check for the given indicator specified.
      *

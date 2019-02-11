@@ -11,7 +11,7 @@ interface DashboardState { coinPairs: string[], timeUnits: string[], shownIndica
                            backtestData: BacktestData[], profit: number }
 
 /**
- * The Dashboard component contains the entire home page of the crypto backtester/bot
+ * The Dashboard component contains the entire home page of the crypto backtester
  */
 export class Dashboard extends React.Component<DashboardProps, DashboardState> {
 	constructor(props) {
@@ -34,6 +34,8 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
 
 	/**
      * Updates the set of shown indicator strings with a new set
+     *
+     * @param {Set<string>} newIndicators: A set denoting the list of visible indicators
      */
     updateIndicators(newIndicators: Set<string>): void {
         this.setState({shownIndicators: newIndicators});
@@ -54,6 +56,8 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
 
     /**
      * Retrieves backtesting data from the server
+     *
+     * @param {BacktestPayload} payload: The backtest payload object containing coin, strategy, and indicator information
      */
 	getBacktestingData(payload: BacktestPayload) {
 	    const URL = `${window.location.origin}/backtest?pair=${payload.coinPair}&period=${payload.timeUnit}` +
@@ -61,11 +65,11 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
 	    const jsonBody = {indicators: payload.indicators, buyStrategy: payload.buyStrategy, sellStrategy: payload.sellStrategy};
 
         POSTRequest(URL, jsonBody).then(resp => {
-            console.log("Got backtesting data:", resp);
 
             const result = resp["result"];
             const backtestData = this.mapBacktestResponse(result);
-            console.log(backtestData);
+
+            console.log("Got backtesting data: ", backtestData);
 
             this.setState({
                 backtestData: backtestData,
@@ -77,6 +81,11 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
         });
     }
 
+    /**
+     * Maps the backtesting JSON response into an array of BacktestData
+     *
+     * @param {object} result: The response obtained from the backtesting API
+     */
     private mapBacktestResponse(result: object): BacktestData[] {
         // Create a mapping from timestamp to closing price, indicators, buys, and sells
 	    let timeMap = new Map<number, object>();
@@ -120,5 +129,3 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
 		)
 	}
 }
-
-export default Dashboard;

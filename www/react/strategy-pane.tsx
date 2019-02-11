@@ -22,10 +22,6 @@ export class StrategyPane extends React.Component<StrategyProps, StrategyState> 
         this.onValueChanged = this.onValueChanged.bind(this);
     }
 
-    componentDidUpdate(prevProps: StrategyProps) {
-        // console.log("PROPPPPS", prevProps, this.props);
-    }
-
     /**
      * Executes when the state of the left-side indicator dropdown field is changed
      *
@@ -117,7 +113,6 @@ export class StrategyPane extends React.Component<StrategyProps, StrategyState> 
 
     /**
      * Creates the add/remove condition buttons
-     *
      * @param {ConditionType} kind
      */
     private makeAddRemoveRow(kind: ConditionType): JSX.Element {

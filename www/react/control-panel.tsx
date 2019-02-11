@@ -42,7 +42,8 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
 
    /**
      * Adds a new condition to either the buy or sell condition lists
-     * @param kind
+    *
+     * @param {ConditionType} kind: An enum value describing whether to add a Buy or Sell condition
      */
    addCondition(kind: ConditionType): void {
        switch (kind) {
@@ -67,7 +68,8 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
 
     /**
      * Removes the last condition from the buy or sell condition list
-     * @param kind
+     *
+     * @param {ConditionType} kind: An enum value describing whether to remove or Buy or Sell condition
      */
    removeCondition(kind: ConditionType): void {
        switch (kind) {
@@ -86,8 +88,9 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
 
    /**
      * Updates the coin information state
-     * @param {CoinState} newState
-     *
+    *
+     * @param {CoinState} newState: A state object containing one or more of the following fields containing coin data:
+     *   `selectedPair`, `selectedTime`, `startTime`, `stopLoss`, and `capital`
      */
    updateCoinState(newState: object): void {
        this.setState(newState);
@@ -95,8 +98,9 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
 
    /**
     * Updates the buy/sell condition state
-    * @param {ConditionType} kind
-    * @param {Condition[]} newConditions
+    *
+    * @param {ConditionType} kind: An enum value describing whether to update a Buy or Sell condition
+    * @param {Condition[]} newConditions: An array of conditions that will be set as the new state
     */
    updateConditions(kind: ConditionType, newConditions: Condition[]): void {
        switch (kind) {
@@ -162,6 +166,26 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
        return [serializedBuy, serializedSell];
    }
 
+    /**
+     *  Requests a backtest by parsing state variables from the control panel and turning them into a backtest payload
+     */
+   private requestBacktest(): void {
+       const [capital, stopLoss] = this.parseCoinInfo();
+       const [buyStrategy, sellStrategy] = this.parseStrategies();
+       const indicators = [...this.props.shownIndicators.values()];
+
+       const backtestData: BacktestPayload = {coinPair: this.state.selectedPair,
+                                              timeUnit: this.state.selectedTime,
+                                              capital: capital,
+                                              stopLoss: stopLoss,
+                                              startTime: Math.round(this.state.startTime.getTime() / 1000),
+                                              buyStrategy: buyStrategy,
+                                              sellStrategy: sellStrategy,
+                                              indicators: indicators};
+
+       this.props.getBacktestingData(backtestData);
+   }
+
    render() {
 
        return (
@@ -199,21 +223,6 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
        )
    }
 
-   requestBacktest(): void {
-       const [capital, stopLoss] = this.parseCoinInfo();
-       const [buyStrategy, sellStrategy] = this.parseStrategies();
-       const indicators = [...this.props.shownIndicators.values()];
 
-       const backtestData: BacktestPayload = {coinPair: this.state.selectedPair,
-                                              timeUnit: this.state.selectedTime,
-                                              capital: capital,
-                                              stopLoss: stopLoss,
-                                              startTime: Math.round(this.state.startTime.getTime() / 1000),
-                                              buyStrategy: buyStrategy,
-                                              sellStrategy: sellStrategy,
-                                              indicators: indicators};
-
-       this.props.getBacktestingData(backtestData);
-   }
 
 }
