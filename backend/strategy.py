@@ -32,7 +32,7 @@ class BacktestingStrategy(object):
         sample_price = lambda op, close: random.uniform(min(op, close), max(op, close))
 
         # The zero's are to take up space since our indicators require a full dataframe of OHLC datas
-        self.prices = [[0, 0, 0, 0, sample_price(candle.open, candle.close), 0] for candle in candlesticks]
+        self.prices = [[candle.time, 0, 0, 0, candle.close, 0] for candle in candlesticks]
 
         # Hacky way to ensure indices match up :(
         rsi = [None] * 14
@@ -50,13 +50,14 @@ class BacktestingStrategy(object):
 
             # Get the (sampled) closing price
             current_price = self.prices[i][4]
+            current_time = self.prices[i][0]
             current_rsi = rsi[i]["values"] if rsi[i] else None
             current_nine_period = nine_period[i]["values"] if nine_period[i] else None
             current_fifteen_period = fifteen_period[i]["values"] if fifteen_period[i] else None
             current_nine_period_ema = nine_period_ema[i]["values"] if nine_period_ema[i] else None
 
-            decision = Decision({'currentprice': current_price, 'rsi': current_rsi, 'sma9': current_nine_period,
-                                 'sma15': current_fifteen_period, 'ema9': current_nine_period_ema})
+            decision = Decision({'currentprice': current_price, 'rsi': current_rsi, 'sma-9': current_nine_period,
+                                 'sma-15': current_fifteen_period, 'ema-9': current_nine_period_ema})
 
             open_trades = [trade for trade in self.trades if trade.status == 'OPEN']
 
@@ -65,7 +66,7 @@ class BacktestingStrategy(object):
                 if decision.should_buy(self.buy_strategy):
                     assert self.reserve > 0
 
-                    self.buys.append((i, current_price))
+                    self.buys.append((current_time, current_price))
                     new_trade = Trade(self.pair, current_price, self.reserve * (1 - self.trading_fee),
                                       stop_loss=self.stop_loss)
                     self.reserve = 0
@@ -75,7 +76,7 @@ class BacktestingStrategy(object):
             for trade in open_trades:
                 if decision.should_sell(self.sell_stategy):
 
-                    self.sells.append((i, current_price))
+                    self.sells.append((current_time, current_price))
                     profit, total = trade.close(current_price)
                     self.profit += profit * (1 - self.trading_fee)
                     self.reserve = total * (1 - self.trading_fee)
@@ -86,7 +87,7 @@ class BacktestingStrategy(object):
                 # Check our stop losses
                 if trade.status == "OPEN" and trade.stop_loss and current_price < trade.stop_loss:
                     profit, total = trade.close(current_price)
-                    self.sells.append((i, current_price))
+                    self.sells.append((current_time, current_price))
                     self.profit += profit * (1 - self.trading_fee)
                     self.reserve = total * (1 - self.trading_fee)
 

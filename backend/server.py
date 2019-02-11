@@ -61,7 +61,7 @@ class Server(object):
         self.add_endpoint(endpoint='/backtest', endpoint_name='backtest', methods=['POST'], handler=backtesting_action)
         self.add_endpoint(endpoint='/pairs', endpoint_name='pairs', handler=pairs_action)
 
-    def run(self, debug=False):
+    def run(self, debug=True):
         import os
         port = int(os.environ.get('PORT', 5000))
         self.app.run(debug=debug, host='0.0.0.0', port=port)

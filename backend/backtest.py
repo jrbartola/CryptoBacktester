@@ -7,7 +7,7 @@ A Backtesting engine
 """
 class Backtester(object):
     def __init__(self, coin_pair, period_length, exchange_interface, capital, stop_loss,
-                 buy_strategy, sell_strategy, start_time=None, indicators={}):
+                 buy_strategy, sell_strategy, start_time=None, indicators=[]):
 
         self.chart = Chart(coin_pair, period_length, exchange_interface)
         self.strategy = BacktestingStrategy(pair=coin_pair, capital=capital, buy_strategy=buy_strategy,
@@ -26,8 +26,8 @@ class Backtester(object):
     Return the results of our backtesting execution
     '''
     def get_results(self):
-        closings = [[i, d.close] for i, d in enumerate(self.chart.get_points(self.start_time))]
-        indicators = self.chart.get_indicators(**self.indicators)
+        closings = [[d.time, d.close] for d in self.chart.get_points(self.start_time)]
+        indicators = self.chart.get_indicators(self.indicators)
 
         results = {'buys': list(self.strategy.buys), 'sells': list(self.strategy.sells), 'closingPrices': closings,
                   'indicators': indicators, 'profit': round(self.strategy.profit, 8)}

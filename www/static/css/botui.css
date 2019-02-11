@@ -1,6 +1,14 @@
 /* Custom CSS */
 body {
-  background-color: #eee; }
+  background-color: #fafafa; }
+
+nav {
+  color: white;
+}
+
+#plot {
+  width: 100%;
+}
 
 .overlay {
   fill: none;
@@ -14,10 +22,29 @@ body {
   float: right; }
 
 .strategy-container {
-  overflow-y: auto;
   max-height: 400px; }
 
-.card-title {
-  text-align: center; }
+.card-container {
+  display: flex;
+}
+
+.card-pane {
+  padding: 0;
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+.add-remove-container {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 10px;
+}
+
+.add-remove-btn {
+  display: inline-block;
+  color: white;
+  border-radius: 50%;
+}
+
 
 /*# sourceMappingURL=botui.css.map */
