@@ -11,6 +11,8 @@ class Chart(object):
         self.indicators = StrategyAnalyzer()
         self.data = []
 
+        print("PERIOD={}small".format(period))
+
         # Query the data to fill our chart truncate it to 'length' elements
         raw_data = exchange_interface.get_historical_data(pair, interval=Chart.period_to_integer(period))
 
@@ -65,44 +67,35 @@ class Chart(object):
         except IndexError:
             raise ValueError("`Period` string should contain a character prefixed with an integer")
 
-    def get_indicators(self, **kwargs):
+    def get_indicators(self, indicators):
         '''
-        Returns the indicators specified in the **kwargs dictionary as a json-serializable dictionary
+        Returns the indicators specified in the input list as a json-serializable dictionary
         '''
-        from math import isnan
+        import re
 
-        # Indicators are hardcoded for now. Will be updated to accommodate variable-sized MA's
-        response = {
-            'bollinger_upper': [],
-            'bollinger_lower': [],
-            'sma9': [],
-            'sma15': []
-        }
+        response = {}
 
         # Get closing historical datapoints
-        closings = [[0, 0, 0, 0, x.close, 0] for x in self.data]
+        closings = [[x.time, 0, 0, 0, x.close, 0] for x in self.data]
 
-        # The 'bollinger' keyword argument takes in a period, i.e. bollinger=21
-        if "bollinger" in kwargs:
-            period = kwargs["bollinger"]
-            assert type(period) is int
+        for indicator in indicators:
+            if re.fullmatch('sma-\d+', indicator):
+                period = int(indicator[indicator.find('-') + 1:])
 
-            # Offset each band by "period" data points
-            bbupper = [(i + period, datum["values"][0]) for i, datum in enumerate(self.indicators.analyze_bollinger_bands(closings, all_data=True))]
-            bblower = [(i + period, datum["values"][2]) for i, datum in enumerate(self.indicators.analyze_bollinger_bands(closings, all_data=True))]
+                response[indicator] = [(closings[i + period-1][0], datum["values"][0]) for i, datum in
+                                                 enumerate(self.indicators.analyze_sma(closings, period_count=period,
+                                                                                       all_data=True))]
 
-            response['bollinger_upper'] = bbupper
-            response['bollinger_lower'] = bblower
+            if re.fullmatch('bollinger-\d+-\d+', indicator):
+                period, std_dev = [int(m) for m in re.findall('\d+', indicator)]
 
+                # Offset each band by "period" data points
+                bbupper = [(closings[i + period-1][0], datum["values"][0]) for i, datum in
+                           enumerate(self.indicators.analyze_bollinger_bands(closings, all_data=True))]
+                bblower = [(closings[i + period-1][0], datum["values"][2]) for i, datum in
+                           enumerate(self.indicators.analyze_bollinger_bands(closings, all_data=True))]
 
-        # The 'sma' keyword argument takes in a list of periods, i.e. sma=[9,15,21]
-        if "sma" in kwargs:
-            periods = kwargs["sma"]
-            assert type(periods) is list
-
-            for period in periods:
-                # Offset each sma by "period" data points
-                response['sma' + str(period)] = [(i + period, datum["values"][0]) for i, datum in
-                                                 enumerate(self.indicators.analyze_sma(closings, period_count=period, all_data=True))]
+                response['bollinger_upper'] = bbupper
+                response['bollinger_lower'] = bblower
 
         return response
