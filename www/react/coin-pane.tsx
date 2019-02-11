@@ -20,7 +20,7 @@ export class CoinPane extends React.Component<CoinProps, CoinState> {
         return (
             <div className="card-body strategy-container">
                 <div className="row">
-                 <div className="input-field col s6">
+                 <div className="input-field col-md-6">
                  <select value={this.props.selectedPair} id="coin-pair" className="form-control"
                          onChange={(e) => this.props.updateCoinState({selectedPair: e.target.value})}>
                      { this.props.coinPairs.map(pair =>
@@ -29,7 +29,7 @@ export class CoinPane extends React.Component<CoinProps, CoinState> {
                  </select>
                  <label htmlFor="coin-pair">Coin Pair</label>
                  </div>
-                 <div className="input-field col s6">
+                 <div className="input-field col-md-6">
                    <input value={this.props.capital} placeholder="Eg: 0.01" id="amount-btc" type="text"
                           onChange={(e) => this.props.updateCoinState({capital: e.target.value})}
                           className="form-control" />
@@ -37,7 +37,7 @@ export class CoinPane extends React.Component<CoinProps, CoinState> {
                  </div>
                 </div>
                 <div className="row">
-                 <div className="input-field col s6">
+                 <div className="input-field col-4">
                    <select value={this.props.selectedTime} id="time-unit" className="form-control"
                            onChange={(e) => this.props.updateCoinState({selectedTime: e.target.value})}>
                      { this.props.timeUnits.map(unit =>
@@ -46,7 +46,7 @@ export class CoinPane extends React.Component<CoinProps, CoinState> {
                    </select>
                    <label>Time Unit</label>
                  </div>
-                 <div className="input-field col s6">
+                 <div className="input-field col-8">
                      <DatePicker
                         selected={this.props.startTime}
                         onChange={(date) => this.props.updateCoinState({startTime: date})}

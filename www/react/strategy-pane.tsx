@@ -126,12 +126,12 @@ export class StrategyPane extends React.Component<StrategyProps, StrategyState> 
 
         return (
             <div className="row add-remove-container">
-                 <a href="#" onClick={() => this.props.addCondition(kind)} className="btn btn-primary add-remove-btn">
+                 <a onClick={() => this.props.addCondition(kind)} className="btn btn-primary btn-sm add-remove-btn">
                      <i className="fa fa-plus"></i>
                  </a>
 
                 {conditionLength > 1 &&
-                    <a href="#" onClick={() => this.props.removeCondition(kind)} className="btn btn-primary add-remove-btn">
+                    <a onClick={() => this.props.removeCondition(kind)} className="btn btn-primary btn-sm add-remove-btn">
                         <i className="fa fa-minus"></i>
                     </a>
                 }

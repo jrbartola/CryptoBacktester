@@ -191,8 +191,8 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
                         </div>
                     </div>
                     <div className="card-footer">
-                        <a className="btn btn-primary" role="button" onClick={this.requestBacktest}>Start</a>
-                      <h5 className="right white-text">Profit: {this.props.profit} BTC</h5>
+                        <a className="btn btn-primary" id="start-btn" role="button" onClick={this.requestBacktest}>Start</a>
+                      <h5 className="right">Profit: {this.props.profit} BTC</h5>
                     </div>
                   </div>
                 </div>
