@@ -65,18 +65,21 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
 	    const jsonBody = {indicators: payload.indicators, buyStrategy: payload.buyStrategy, sellStrategy: payload.sellStrategy};
 
         POSTRequest(URL, jsonBody).then(resp => {
+            console.log("Got backtesting data: ", resp);
+
+            if (resp["response"] !== 200) {
+                throw new Error(`Error occurred while fetching backtest results: ${resp["result"]["message"]}`);
+            }
 
             const result = resp["result"];
             const backtestData = this.mapBacktestResponse(result);
-
-            console.log("Got backtesting data: ", backtestData);
 
             this.setState({
                 backtestData: backtestData,
                 profit: result["profit"]
             });
         }).catch(errResp => {
-            Swal("Uh oh!", "Something went wrong: " + "<br/> . <strong>Error Message:</strong> \"" + errResp + "\"", "error");
+            Swal("Uh oh!", "Something went wrong: " + "<br/><strong>Error Message:</strong> \"" + errResp + "\"", "error");
             console.error(`An error occurred while submitting the search query (${errResp})`);
         });
     }

@@ -16,8 +16,8 @@ export class Plot extends React.Component<PlotProps, PlotState> {
 
     }
 
-    static formatXAxis(tick): string {
-        return moment(tick).format('MM/D/YY');
+    static formatDateLabel(datestr): (string) => string {
+        return (tick) => moment(tick).format(datestr);
     }
 
     static makeLine(indicator): JSX.Element {
@@ -25,7 +25,7 @@ export class Plot extends React.Component<PlotProps, PlotState> {
         const randomColor = [...Array(6).keys()]
             .map(_ => alphabet[Math.floor(Math.random() * 16)]).join('');
 
-        return <Line key={indicator} type="linear" label={indicator} dataKey={"indicators." + indicator}
+        return <Line key={indicator} type="linear" name={indicator} dataKey={"indicators." + indicator}
                      stroke={'#' + randomColor} strokeWidth={2} dot={false} />
     }
 
@@ -35,10 +35,10 @@ export class Plot extends React.Component<PlotProps, PlotState> {
                 <div id="plot">
                     <ResponsiveContainer height={300} width="100%">
                            <ComposedChart data={this.props.backtestData} margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-                           <XAxis dataKey="time" type="number" tickFormatter={Plot.formatXAxis} scale="time" domain={['dataMin', 'dataMax']} />
+                           <XAxis dataKey="time" type="number" tickFormatter={Plot.formatDateLabel('MM/D/YY')} scale="time" domain={['dataMin', 'dataMax']} />
                            <YAxis dataKey="close" domain={['dataMin', 'dataMax']} />
                            <CartesianGrid strokeDasharray="3 3"/>
-                           <Tooltip/>
+                           <Tooltip formatter={(value, name) => Math.round(value * 1e6) / 1e6} labelFormatter={Plot.formatDateLabel('MM/D/YY LT')}/>
                            <Legend />
                            <Line type="monotone" dataKey="close" stroke="#8884d8" strokeWidth={2} dot={false} />
 
