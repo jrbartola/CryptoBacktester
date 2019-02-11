@@ -36,7 +36,7 @@ class Server(object):
             coin_pair = request.args.get('pair').replace('/', '-')
             period_length = request.args.get('period')
             capital = float(request.args.get('capital'))
-            stop_loss = float(request.args.get('stopLoss'))
+            stop_loss = float(request.args.get('stopLoss')) / 100
             start_time = int(request.args.get('startTime'))
 
             post_data = request.get_json()
