@@ -34,8 +34,7 @@ export const GETRequest = async (url: string): Promise<HTTPResponse> => {
     }
 
     try {
-        const jsonResponse  = await response.json();
-        return successResponse(jsonResponse);
+        return await response.json();
     } catch (err) {
         return failureResponse("Failure occurred when making GET request: " + err);
     }
@@ -59,8 +58,7 @@ export const POSTRequest = async (url: string, payload: object): Promise<HTTPRes
 
     // Try to send a json response if appropriate. If there is no JSON to be returned, just send a success code
     try {
-        const jsonResponse  = await response.json();
-        return successResponse(jsonResponse);
+        return await response.json();
     } catch (err) {
         return successResponse(200);
     }

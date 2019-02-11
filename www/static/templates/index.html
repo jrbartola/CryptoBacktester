@@ -19,17 +19,17 @@
     <!-- Raleway Font CSS -->
     <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Raleway" />
 
-    <!-- Materialize Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+
+     <!-- Bootstrap CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+
 
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/botui.css') }}" rel="stylesheet">
 
-    <!-- Materialize CSS -->
-    <link href="{{ url_for('static', filename='css/materialize.css') }}" rel="stylesheet">
 
-    <!-- SweetAlert2 CSS -->
-    <link href="{{ url_for('static', filename='css/sweetalert2.min.css') }}" rel="stylesheet">
 
 </head>
 
@@ -38,19 +38,14 @@
     <!-- React components get rendered here -->
   </div>
 
-  <!-- jQuery -->
-  <script src="{{ url_for('static', filename='js/jquery-3.2.1.min.js') }}"></script>
-  <!-- Compiled and minified Materialize JavaScript -->
-  <script src="{{ url_for('static', filename='js/materialize.min.js') }}"></script>
-
-  <!-- Load SweetAlert2 js -->
-  <script src="{{ url_for('static', filename='js/sweetalert2.min.js') }}"></script>
+  <!-- Compiled and minified Bootstrap JavaScript -->
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 
   <!-- Load d3.js Graphing Library -->
   <script src="{{ url_for('static', filename='js/d3.v4.min.js') }}"></script>
 
   <!-- Main Entry Point -->
-  <script src="{{ url_for('static', filename='index.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='build/bundle.js') }}" defer></script>
 
 </body>
 

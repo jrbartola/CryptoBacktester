@@ -1,7 +1,7 @@
 import * as React from 'react';
 
-import Navbar from './navbar';
-import Dashboard from './dashboard';
+import { Navbar } from './navbar';
+import { Dashboard } from './dashboard';
 
 interface ContainerProps {}
 interface ContainerState {}

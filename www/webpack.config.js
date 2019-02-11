@@ -4,7 +4,7 @@ const config = {
     entry: ["./react/index.tsx"],
     mode: "development",
     output: {
-        path: path.resolve(__dirname, "build"),
+        path: path.resolve(__dirname, "static/build"),
         filename: "bundle.js"
     },
     resolve: {

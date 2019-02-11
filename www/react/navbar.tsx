@@ -11,10 +11,8 @@ export class Navbar extends React.Component<NavProps, NavState> {
 
 	render() {
 		return (
-			<nav>
-              <div className="nav-wrapper">
-              <a href="#" className="brand-logo">CryptoBot</a>
-              </div>
+			<nav className="navbar navbar-light bg-primary">
+				<a className="navbar-brand">Crypto Backtester</a>
             </nav>
 		)
 	}
