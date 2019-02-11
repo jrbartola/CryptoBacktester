@@ -103,7 +103,7 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
         });
 
         return [...timeMap.entries()].map(([time, data]) =>  {
-            return {...data, time: time*1000} as BacktestData;
+            return {close: 0, ...data, time: time*1000} as BacktestData;
         }).sort((a, b) => a.time < b.time ? -1 : 1);
     }
 

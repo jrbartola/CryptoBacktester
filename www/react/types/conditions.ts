@@ -30,4 +30,4 @@ export type BacktestPayload = {coinPair: string,
                                sellStrategy: object,
                                indicators: string[]}
 
-export type BacktestData = {time: string, close: number, buy?: number, sell?: number, indicators?: object[]}
+export type BacktestData = {time: number, close: number, buy?: number, sell?: number, indicators?: object[]}
