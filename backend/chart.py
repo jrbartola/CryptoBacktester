@@ -11,8 +11,6 @@ class Chart(object):
         self.indicators = StrategyAnalyzer()
         self.data = []
 
-        print("PERIOD={}small".format(period))
-
         # Query the data to fill our chart truncate it to 'length' elements
         raw_data = exchange_interface.get_historical_data(pair, interval=Chart.period_to_integer(period))
 
@@ -68,9 +66,14 @@ class Chart(object):
             raise ValueError("`Period` string should contain a character prefixed with an integer")
 
     def get_indicators(self, indicators):
-        '''
+        """
         Returns the indicators specified in the input list as a json-serializable dictionary
-        '''
+
+        Args:
+            indicators (list[str]): A list of strings where each string is a JSON representation of an indicator
+        Returns:
+            dict[str, -]: A response dictionary mapping JSON indicator names to their data points
+        """
         import re
 
         response = {}

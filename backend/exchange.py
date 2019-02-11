@@ -10,7 +10,6 @@ class Exchange(object):
 
     def get_historical_data(self, coin_pair, interval=3600):
         # Candlesticks need to be returned in reverse order (GDAX gives us most recent data first)
-        print(interval)
         return self.client.get_product_historic_rates(coin_pair, granularity=interval)[::-1]
 
     def get_available_keypairs(self):

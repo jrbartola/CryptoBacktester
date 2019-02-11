@@ -15,17 +15,22 @@ class Backtester(object):
         self.indicators = indicators
         self.start_time = start_time
 
-    '''
-    Run our backtesting strategy on the set of historical data parsed as candlesticks
-    '''
+
     def run(self):
+        """
+        Run our backtesting strategy on the set of historical data parsed as candlesticks
+        """
         candlesticks = self.chart.get_points(self.start_time)
         self.strategy.run(candlesticks)
 
-    '''
-    Return the results of our backtesting execution
-    '''
+
     def get_results(self):
+        """
+        Return the results of our backtesting execution
+
+        Returns:
+            dict[str, -]: A dictionary mapping strings to their result properties
+        """
         closings = [[d.time, d.close] for d in self.chart.get_points(self.start_time)]
         indicators = self.chart.get_indicators(self.indicators)
 

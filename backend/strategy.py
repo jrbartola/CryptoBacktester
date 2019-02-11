@@ -4,9 +4,7 @@ from trade import Trade
 from analysis import StrategyAnalyzer
 from decision import Decision
 
-'''
-BackTesting Strategy
-'''
+
 class BacktestingStrategy(object):
     def __init__(self, pair, capital, buy_strategy, sell_strategy, trading_fee=0, stop_loss=0):
         self.prices = []
@@ -23,10 +21,13 @@ class BacktestingStrategy(object):
         self.trading_fee = trading_fee
         self.stop_loss = stop_loss
 
-    '''
-    Runs our backtesting strategy on the set of backtesting candlestick data
-    '''
     def run(self, candlesticks):
+        """
+        Runs our backtesting strategy on the set of candlestick data
+
+        Args:
+            candlesticks (list[Candlestick]): A list of candlestick objects
+        """
 
         # Samples a random price within the range [candlestick.open, candlestick.close]
         sample_price = lambda op, close: random.uniform(min(op, close), max(op, close))
