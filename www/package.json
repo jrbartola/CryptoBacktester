@@ -4,6 +4,7 @@
   "description": "Crypto Strategic Analysis Trading Tool",
   "main": "static/main.tsx",
   "scripts": {
+    "heroku-postbuild": "webpack",
     "build": "webpack",
     "serve": "webpack-dev-server --hot",
     "watch": "webpack --watch",
