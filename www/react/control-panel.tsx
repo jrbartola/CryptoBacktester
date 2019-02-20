@@ -164,7 +164,7 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
                                           updateConditions={this.updateConditions} />
                           </div>
                           <div className="card col-md-3 card-pane">
-                            <h5 className="card-header">Plot</h5>
+                            <h5 className="card-header">Plot (TODO)</h5>
                               <IndicatorPane shownIndicators={this.props.shownIndicators} updateIndicators={this.props.updateIndicators} />
                           </div>
                         </div>
