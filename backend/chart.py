@@ -99,7 +99,7 @@ class Chart(object):
 
                 response[indicator] = [(closings[i][0], None) for i in range(period)] + \
                                       [(closings[i + period - 1][0], datum) for i, datum in
-                                       enumerate(sma_datapoints)]
+                                       enumerate(ema_datapoints)]
 
             # RSIs
             if re.fullmatch('rsi-\d+', indicator):
