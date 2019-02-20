@@ -32,6 +32,8 @@ class Server(object):
             return jsonify(response=200, result=pairs)
 
         def backtesting_action():
+            import json
+
             # Our Exchange client only accepts coin pairs separated by a '-', not '/'
             coin_pair = request.args.get('pair').replace('/', '-')
             period_length = request.args.get('period')
@@ -41,8 +43,8 @@ class Server(object):
 
             post_data = request.get_json()
             indicators = post_data['indicators']
-            buy_strategy = post_data['buyStrategy']
-            sell_strategy = post_data['sellStrategy']
+            buy_strategy = json.loads(post_data['buyStrategy'])
+            sell_strategy = json.loads(post_data['sellStrategy'])
 
             try:
                 backtester = Backtester(coin_pair, period_length, self.exchange_interface, capital, stop_loss,

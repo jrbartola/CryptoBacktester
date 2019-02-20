@@ -1,4 +1,4 @@
-from analysis import StrategyAnalyzer
+import analysis
 from candlestick import Candlestick
 
 """
@@ -8,7 +8,6 @@ class Chart(object):
     def __init__(self, pair, period, exchange_interface):
 
         self.pair = pair
-        self.indicators = StrategyAnalyzer()
         self.data = []
 
         # Query the data to fill our chart truncate it to 'length' elements
@@ -88,28 +87,37 @@ class Chart(object):
             # Simple Moving Averages
             if re.fullmatch('sma-\d+', indicator):
                 period = int(indicator[indicator.find('-') + 1:])
+                sma_datapoints = analysis.analyze_sma(closings, period_count=period)[indicator][period:]
 
                 response[indicator] = [(closings[i][0], None) for i in range(period)] + \
-                                      [(closings[i + period-1][0], datum["values"][0]) for i, datum in
-                                       enumerate(self.indicators.analyze_sma(closings, period_count=period, all_data=True))]
+                                      [(closings[i + period-1][0], datum) for i, datum in enumerate(sma_datapoints)]
+
+            # Exponential Moving Averages
+            if re.fullmatch('ema-\d+', indicator):
+                period = int(indicator[indicator.find('-') + 1:])
+                ema_datapoints = analysis.analyze_ema(closings, period_count=period)[indicator][period:]
+
+                response[indicator] = [(closings[i][0], None) for i in range(period)] + \
+                                      [(closings[i + period - 1][0], datum) for i, datum in
+                                       enumerate(sma_datapoints)]
 
             # RSIs
             if re.fullmatch('rsi-\d+', indicator):
                 period = int(indicator[indicator.find('-') + 1:])
+                rsi_datapoints = analysis.analyze_rsi(closings, period_count=period)[indicator][period:]
 
                 response[indicator] = [(closings[i][0], None) for i in range(period)] + \
-                                      [(closings[i + period - 1][0], datum["values"][0]) for i, datum in
-                                       enumerate(self.indicators.analyze_rsi(closings, period_count=period, all_data=True))]
+                                      [(closings[i + period - 1][0], datum) for i, datum in enumerate(rsi_datapoints)]
 
             # Bollinger Bands
             if re.fullmatch('bollinger-\d+-\d+', indicator):
                 period, std_dev = [int(m) for m in re.findall('\d+', indicator)]
 
                 # Offset each band by "period" data points
-                bbupper = [(closings[i + period-1][0], datum["values"][0]) for i, datum in
-                           enumerate(self.indicators.analyze_bollinger_bands(closings, all_data=True))]
-                bblower = [(closings[i + period-1][0], datum["values"][2]) for i, datum in
-                           enumerate(self.indicators.analyze_bollinger_bands(closings, all_data=True))]
+                bbupper = [(closings[i][0], datum) for i, datum in
+                           enumerate(analysis.analyze_bollinger_bands(closings))]
+                bblower = [(closings[i][0], datum) for i, datum in
+                           enumerate(analysis.analyze_bollinger_bands(closings))]
 
                 response['bollinger_upper'] = bbupper
                 response['bollinger_lower'] = bblower

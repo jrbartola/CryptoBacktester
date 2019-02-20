@@ -5,12 +5,12 @@ import {BacktestPayload, Comparator, Condition, ConditionType} from "./types/con
 import {StrategyPane} from "./strategy-pane";
 import {IndicatorPane} from "./indicator-pane";
 import {CoinPane} from "./coin-pane";
-import {INDICATOR_MAP} from "./types/indicators";
+import {evaluateIndicators, parse} from "./util/parser/parser";
 
 
 interface ControlProps { coinPairs: string[], timeUnits: string[], profit: number, shownIndicators: Set<string>,
                          getBacktestingData: (...params: Object[]) => void, updateIndicators: (s: Set<string>) => void }
-interface ControlState { buyConditions: Condition[], sellConditions: Condition[], selectedPair: string,
+interface ControlState { buyQuery: string, sellQuery: string, selectedPair: string,
                          selectedTime: string, startTime: Date, stopLoss: string, capital: string }
 
 /**
@@ -25,65 +25,21 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
        const firstTime = this.props.timeUnits.length > 0 ? this.props.timeUnits[0] : "No times";
 
        this.state = {
-                     buyConditions: [{leftSide: INDICATOR_MAP.get("currentprice"), comparator: Comparator.GT, rightSide: INDICATOR_MAP.get("sma-9")}],
-                     sellConditions: [{leftSide: INDICATOR_MAP.get("currentprice"), comparator: Comparator.LT, rightSide: INDICATOR_MAP.get("sma-9")}],
-                     selectedPair: firstPair, selectedTime: firstTime, startTime: new Date(), stopLoss: "", capital: ""
+                     buyQuery: "current-price > sma(9)",
+                     sellQuery: "current-price < sma(9)",
+                     selectedPair: firstPair,
+                     selectedTime: firstTime,
+                     startTime: new Date(),
+                     stopLoss: "",
+                     capital: ""
                     };
 
 
-       this.addCondition = this.addCondition.bind(this);
-       this.removeCondition = this.removeCondition.bind(this);
        this.updateConditions = this.updateConditions.bind(this);
        this.updateCoinState = this.updateCoinState.bind(this);
        this.parseStrategies = this.parseStrategies.bind(this);
        this.requestBacktest = this.requestBacktest.bind(this);
 
-   }
-
-   /**
-     * Adds a new condition to either the buy or sell condition lists
-    *
-     * @param {ConditionType} kind: An enum value describing whether to add a Buy or Sell condition
-     */
-   addCondition(kind: ConditionType): void {
-       switch (kind) {
-           case ConditionType.BUY:
-               this.setState({buyConditions: this.state.buyConditions.concat([
-                       {leftSide: INDICATOR_MAP.get("currentprice"),
-                        comparator: Comparator.GT,
-                        rightSide: INDICATOR_MAP.get("sma-9")}
-                   ])});
-               break;
-           case ConditionType.SELL:
-               this.setState({sellConditions: this.state.sellConditions.concat([
-                       {leftSide: INDICATOR_MAP.get("currentprice"),
-                        comparator: Comparator.LT,
-                        rightSide: INDICATOR_MAP.get("sma-9")}
-                   ])});
-               break;
-           default:
-               throw new Error("Argument `kind` must either be of type ConditionType.BUY or ConditionType.SELL");
-       }
-   }
-
-    /**
-     * Removes the last condition from the buy or sell condition list
-     *
-     * @param {ConditionType} kind: An enum value describing whether to remove or Buy or Sell condition
-     */
-   removeCondition(kind: ConditionType): void {
-       switch (kind) {
-           case ConditionType.BUY:
-               const buyConditions = this.state.buyConditions;
-               this.setState({buyConditions: buyConditions.splice(0, buyConditions.length - 1)});
-               break;
-           case ConditionType.SELL:
-               const sellConditions = this.state.sellConditions;
-               this.setState({sellConditions: sellConditions.splice(0, sellConditions.length - 1)});
-               break;
-           default:
-               throw new Error("Argument `kind` must either be of type ConditionType.BUY or ConditionType.SELL");
-       }
    }
 
    /**
@@ -100,15 +56,15 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
     * Updates the buy/sell condition state
     *
     * @param {ConditionType} kind: An enum value describing whether to update a Buy or Sell condition
-    * @param {Condition[]} newConditions: An array of conditions that will be set as the new state
+    * @param {Condition[]} newQuery: The updated condition query
     */
-   updateConditions(kind: ConditionType, newConditions: Condition[]): void {
+   updateConditions(kind: ConditionType, newQuery: string): void {
        switch (kind) {
            case ConditionType.BUY:
-               this.setState({buyConditions: newConditions});
+               this.setState({buyQuery: newQuery});
                break;
            case ConditionType.SELL:
-               this.setState({sellConditions: newConditions});
+               this.setState({sellQuery: newQuery});
                break;
            default:
                throw new Error("Argument `kind` must either be of type ConditionType.BUY or ConditionType.SELL");
@@ -131,39 +87,41 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
 
        if (!capitalReg.exec(capital)) {
            Swal("Uh Oh!", "You need to enter a valid number for your starting capital.", "error");
-           throw "Invalid Capital";
+           throw new Error("Invalid Capital");
        }
 
        if (stopLoss !== "" && !stopLossReg.exec(stopLoss)) {
            Swal("Uh Oh!", "You need to enter a valid percentage (0 - 100) for your stop loss.", "error");
-           throw "Invalid Stop Loss";
+           throw new Error("Invalid Stop Loss");
        }
 
        return [Number(capital), Number(stopLoss)];
    }
 
     /**
-     * Serializes the list of buy and sell conditions into a JSON-like payload object. Each key represents a left-side
-     * indicator type, and each value contains its corresponding comparator and value
+     * Serializes the list of buy and sell conditions into a stringified JSON payload object.
      *
-     * @returns {[object, object]}: A serialize buy and serialized sell object, respectively.
+     * @returns {[string, string, string[]]}: A serialized buy and serialized sell object, and set of indicators respectively.
      */
-   private parseStrategies(): [object, object] {
-       const buyConditions = this.state.buyConditions;
-       const sellConditions = this.state.sellConditions;
+   private parseStrategies(): [string, string, Set<string>] {
+       const parsedBuy = parse(this.state.buyQuery);
 
-       let serializedBuy = {};
-       let serializedSell = {};
+       if (!parsedBuy) {
+           Swal("Uh Oh!", "You have not entered a valid buy condition. See documentation for help", "error");
+           throw new Error("Invalid Buy Condition");
+       }
 
-       buyConditions.forEach(cond => {
-           serializedBuy[cond.leftSide.jsonRepr()] = {comparator: cond.comparator.toString(), value: cond.rightSide.jsonRepr()}
-       });
+       const parsedSell = parse(this.state.sellQuery);
 
-       sellConditions.forEach(cond => {
-           serializedSell[cond.leftSide.jsonRepr()] = {comparator: cond.comparator.toString(), value: cond.rightSide.jsonRepr()}
-       });
+       if (!parsedSell) {
+           Swal("Uh Oh!", "You have not entered a valid sell condition. See documentation for help", "error");
+           throw new Error("Invalid Sell Condition");
+       }
 
-       return [serializedBuy, serializedSell];
+       // Cast indicator array to set to remove duplicates
+       const indicators = new Set(evaluateIndicators(parsedBuy).concat(evaluateIndicators(parsedSell));
+
+       return [JSON.stringify(parsedBuy), JSON.stringify(parsedSell), indicators];
    }
 
     /**
@@ -171,8 +129,7 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
      */
    private requestBacktest(): void {
        const [capital, stopLoss] = this.parseCoinInfo();
-       const [buyStrategy, sellStrategy] = this.parseStrategies();
-       const indicators = [...this.props.shownIndicators.values()];
+       const [buyStrategy, sellStrategy, indicators] = this.parseStrategies();
 
        const backtestData: BacktestPayload = {coinPair: this.state.selectedPair,
                                               timeUnit: this.state.selectedTime,
@@ -181,7 +138,7 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
                                               startTime: Math.round(this.state.startTime.getTime() / 1000),
                                               buyStrategy: buyStrategy,
                                               sellStrategy: sellStrategy,
-                                              indicators: indicators};
+                                              indicators: [...indicators.values()]};
 
        this.props.getBacktestingData(backtestData);
    }
@@ -202,10 +159,8 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
                           </div>
                           <div className="card col-md-5 card-pane">
                             <h5 className="card-header">Strategy</h5>
-                            <StrategyPane buyConditions={this.state.buyConditions}
-                                          sellConditions={this.state.sellConditions}
-                                          addCondition={this.addCondition}
-                                          removeCondition={this.removeCondition}
+                            <StrategyPane buyQuery={this.state.buyQuery}
+                                          sellQuery={this.state.sellQuery}
                                           updateConditions={this.updateConditions} />
                           </div>
                           <div className="card col-md-3 card-pane">

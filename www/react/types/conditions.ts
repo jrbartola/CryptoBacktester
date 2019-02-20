@@ -26,8 +26,8 @@ export type BacktestPayload = {coinPair: string,
                                capital: number,
                                stopLoss: number,
                                startTime: number,
-                               buyStrategy: object,
-                               sellStrategy: object,
+                               buyStrategy: string,
+                               sellStrategy: string,
                                indicators: string[]}
 
 export type BacktestData = {time: number, close: number, buy?: number, sell?: number, indicators?: object[]}

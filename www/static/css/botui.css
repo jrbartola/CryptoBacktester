@@ -52,5 +52,12 @@ nav {
   color: white;
 }
 
+.cond-group {
+  position: relative;
+}
+
+.fa-1p5x {
+  font-size: 1.5em;
+}
 
 /*# sourceMappingURL=botui.css.map */

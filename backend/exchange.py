@@ -14,3 +14,6 @@ class Exchange(object):
 
     def get_available_keypairs(self):
         return [product['display_name'] for product in self.client.get_products()]
+
+    def get_ticker(self, coin_pair):
+        return self.client.get_product_ticker(coin_pair)
