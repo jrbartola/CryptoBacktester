@@ -29,7 +29,8 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
                      sellQuery: "current-price < sma(9)",
                      selectedPair: firstPair,
                      selectedTime: firstTime,
-                     startTime: new Date(),
+                     // Catastrophic way of setting date to yesterday
+                     startTime: new Date(new Date().setDate(new Date().getDate() - 1)),
                      stopLoss: "",
                      capital: ""
                     };
@@ -131,6 +132,7 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
        const [capital, stopLoss] = this.parseCoinInfo();
        const [buyStrategy, sellStrategy, indicators] = this.parseStrategies();
 
+
        const backtestData: BacktestPayload = {coinPair: this.state.selectedPair,
                                               timeUnit: this.state.selectedTime,
                                               capital: capital,
@@ -140,10 +142,13 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
                                               sellStrategy: sellStrategy,
                                               indicators: [...indicators.values()]};
 
+       // Update the shown indicators and request a backtest
+       this.props.updateIndicators(indicators);
        this.props.getBacktestingData(backtestData);
    }
 
    render() {
+       const quoteCurrency = this.state.selectedPair.substring(this.state.selectedPair.indexOf('/') + 1);
 
        return (
                 <div className="col-md-12 col-sm-12">
@@ -157,21 +162,21 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
                                       selectedTime={this.state.selectedTime} stopLoss={this.state.stopLoss}
                                       capital={this.state.capital} startTime={this.state.startTime}/>
                           </div>
-                          <div className="card col-md-5 card-pane">
+                          <div className="card col-md-8 card-pane">
                             <h5 className="card-header">Strategy</h5>
                             <StrategyPane buyQuery={this.state.buyQuery}
                                           sellQuery={this.state.sellQuery}
                                           updateConditions={this.updateConditions} />
                           </div>
-                          <div className="card col-md-3 card-pane">
-                            <h5 className="card-header">Plot (TODO)</h5>
-                              <IndicatorPane shownIndicators={this.props.shownIndicators} updateIndicators={this.props.updateIndicators} />
-                          </div>
+                          {/*<div className="card col-md-3 card-pane">*/}
+                            {/*<h5 className="card-header">Plot (TODO)</h5>*/}
+                              {/*<IndicatorPane shownIndicators={this.props.shownIndicators} />*/}
+                          {/*</div>*/}
                         </div>
                     </div>
                     <div className="card-footer">
                         <a className="btn btn-primary" id="start-btn" role="button" onClick={this.requestBacktest}>Start</a>
-                      <h5 className="right">Profit: {this.props.profit} BTC</h5>
+                      <h5 className="right">Profit: {this.props.profit} {quoteCurrency}</h5>
                     </div>
                   </div>
                 </div>

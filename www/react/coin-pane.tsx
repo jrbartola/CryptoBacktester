@@ -50,7 +50,7 @@ export class CoinPane extends React.Component<CoinProps, CoinState> {
                      <DatePicker
                         selected={this.props.startTime}
                         onChange={(date) => this.props.updateCoinState({startTime: date})}
-                        maxDate={new Date()}
+                        maxDate={new Date(new Date().setDate(new Date().getDate() - 1))}
                         />
                    <label className="active" htmlFor="start-time">Start Time</label>
                  </div>

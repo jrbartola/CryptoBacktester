@@ -38,7 +38,6 @@ export class StrategyPane extends React.Component<StrategyProps, StrategyState> 
         }
 
         const queryExp = parse(newValue);
-        console.log(JSON.stringify(queryExp));
         switch (kind) {
             case ConditionType.BUY:
                 this.setState({buyParsed: queryExp !== undefined});

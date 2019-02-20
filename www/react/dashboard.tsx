@@ -20,7 +20,7 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
 		this.state = {
 		    coinPairs: ["ETH/BTC", "LTC/BTC", "XRP/BTC"],
             timeUnits: ["1m", "5m", "15m", "1h", "6h", "1d"],
-            shownIndicators: new Set<string>(["sma-9"]),
+            shownIndicators: new Set<string>(),
             backtestData: [],
             profit: 0
         };

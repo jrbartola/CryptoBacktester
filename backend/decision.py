@@ -15,20 +15,12 @@ class Decision(object):
         # TODO(jbartola): Add support for bollinger bands and macd
         return self.indicators['{}-{}'.format(indicator['kind'], indicator['period'])]
 
-
     def should_buy(self, buy_strategy):
         """
         Determines if we should buy given our buy strategies and our observed indicators
 
         Args:
-            buy_strategy: A dictionary of the form: {'<INDICATOR_NAME>': {
-                                                            'comparator': '...',
-                                                            'value': '...'
-                                                            }
-                                                        }
-            <INDICATOR_NAME> can take values such as 'currentprice', 'rsi', 'sma-9', or 'sma-15' (for now)
-            The value for the 'comparator' key can be either 'LT', 'EQ', or 'GT'.
-            The value for the 'value' key can be either a number or the name of an indicator mentioned above.
+            buy_strategy: A parsed Expression object containing the buy conditions for the given decision
 
         Returns:
             True iff each indicator satisfies a comparision using it's 'comparator' value with its 'value' value. False otherwise
@@ -76,14 +68,7 @@ class Decision(object):
         Determines if we should sell given our sell strategies and our observed indicators
 
         Args:
-            sell_strategy: A dictionary of the form: {'<INDICATOR_NAME>': {
-                                                            'comparator': '...',
-                                                            'value': '...'
-                                                            }
-                                                        }
-            <INDICATOR_NAME> can take values such as 'currentprice', 'rsi', 'sma-9', or 'sma-15' (for now)
-            The value for the 'comparator' key can be either 'LT', 'EQ', or 'GT'.
-            The value for the 'value' key can be either a number or the name of an indicator mentioned above.
+            sell_strategy: A parsed Expression object containing the sell conditions for the given decision
 
         Returns:
              True iff each indicator satisfies a comparision using it's 'comparator' value with its 'value' value. False otherwise
