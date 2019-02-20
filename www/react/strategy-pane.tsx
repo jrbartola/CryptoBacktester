@@ -4,8 +4,7 @@ import {ConditionType} from "./types/conditions";
 import {parse} from "./util/parser/parser";
 
 
-interface StrategyProps { buyQuery: string, sellQuery: string, addCondition: (kind: ConditionType) => void,
-                          removeCondition: (kind: ConditionType) => void, updateConditions: (kind: ConditionType, newQuery: string) => void }
+interface StrategyProps { buyQuery: string, sellQuery: string, updateConditions: (kind: ConditionType, newQuery: string) => void }
 interface StrategyState { buyParsed: boolean, sellParsed: boolean }
 
 
