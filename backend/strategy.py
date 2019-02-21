@@ -49,7 +49,7 @@ class BacktestingStrategy(object):
                 self.trade = new_trade
 
             ### CHECK TO SEE IF WE NEED TO SELL ANY OPEN POSITIONS OR HIT A STOP LOSS
-            if self.trade and (decision.should_sell(self.sell_stategy) or
+            elif self.trade and (decision.should_sell(self.sell_stategy) or
                                self.trade.stop_loss and current_price < self.trade.stop_loss):
 
                 profit, total = self.trade.close(current_price)
