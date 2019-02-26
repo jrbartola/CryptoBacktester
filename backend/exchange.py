@@ -17,3 +17,38 @@ class Exchange(object):
 
     def get_ticker(self, coin_pair):
         return self.client.get_product_ticker(coin_pair)
+
+    def buy(self, coin_pair, amount, limit=None):
+        """
+        Buys the specified coin pair at the given price per coin. In total will spend price * amount of
+        the quote currency
+        Args:
+            coin_pair (str): The base-quote currency pair that will be traded
+            amount (float): The amount of the base currency to purchase
+            limit (float): The amount of the base currency that is to be purchased. Defaults to None if this
+              is executed as a market order
+        """
+
+        if limit:
+            return self.client.place_limit_order(side='buy', product_id=coin_pair, price=limit, size=amount)
+
+        return self.client.place_market_order(side='buy', product_id=coin_pair, size=amount)
+
+    def sell(self, coin_pair, amount, limit=None):
+        """
+        Sells the specified coin pair at the given price per coin. In total gain spend price * amount of
+        the base currency
+        Args:
+            coin_pair (str): The base-quote currency pair that will be traded
+            amount (float): The amount of the base currency to sell
+            limit (float): The amount of the base currency that is to be sold. Defaults to None if this
+              is executed as a market order
+        """
+
+        if limit:
+            return self.client.place_limit_order(side='sell', product_id=coin_pair, price=limit, size=amount)
+
+        return self.client.place_market_order(side='sell', product_id=coin_pair, size=amount)
+
+    def get_order(self, uuid):
+        return self.client.get_order(uuid)

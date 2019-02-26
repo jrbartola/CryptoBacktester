@@ -120,7 +120,7 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
        }
 
        // Cast indicator array to set to remove duplicates
-       const indicators = new Set(evaluateIndicators(parsedBuy).concat(evaluateIndicators(parsedSell));
+       const indicators = new Set(evaluateIndicators(parsedBuy).concat(evaluateIndicators(parsedSell)));
 
        return [JSON.stringify(parsedBuy), JSON.stringify(parsedSell), indicators];
    }
@@ -168,10 +168,6 @@ export class ControlPanel extends React.Component<ControlProps, ControlState> {
                                           sellQuery={this.state.sellQuery}
                                           updateConditions={this.updateConditions} />
                           </div>
-                          {/*<div className="card col-md-3 card-pane">*/}
-                            {/*<h5 className="card-header">Plot (TODO)</h5>*/}
-                              {/*<IndicatorPane shownIndicators={this.props.shownIndicators} />*/}
-                          {/*</div>*/}
                         </div>
                     </div>
                     <div className="card-footer">

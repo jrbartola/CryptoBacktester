@@ -1,5 +1,5 @@
 from trade import Trade
-from analysis import *
+import analysis
 from decision import Decision
 
 
@@ -15,6 +15,9 @@ class BacktestingStrategy(object):
         self.sell_stategy = sell_strategy
         self.trading_fee = trading_fee
         self.stop_loss = stop_loss
+
+        print(buy_strategy)
+        print(sell_strategy)
 
     def run(self, candlesticks, indicators):
         """
@@ -58,32 +61,62 @@ class BacktestingStrategy(object):
                 self.reserve = total * (1 - self.trading_fee)
                 self.trade = None
 
-    def show_positions(self):
-        if self.trade:
-            self.trade.show_trade()
-
 
 class BotStrategy(object):
-    def __init__(self, indicators, buy_strategy, sell_strategy, stop_loss=None):
+    def __init__(self, coin_pair, buy_strategy, sell_strategy, stop_loss=None):
 
+        self.pair = coin_pair
         self.buys = []
         self.sells = []
-        self.indicators = indicators
+        self.indicators = BotStrategy.extract_indicators(buy_strategy) | BotStrategy.extract_indicators(sell_strategy)
         self.buy_strategy = buy_strategy
         self.sell_strategy = sell_strategy
         self.stop_loss = stop_loss
         self.trade = None
 
-    def run(self, tohlcv_matrix):
+    @staticmethod
+    def extract_indicators(strategy):
+        """
+        Extracts all of the indicators used in the given buy and sell strategies for this BotStrategy. Returns a set
+        containing the JSON representation of each used indicator
+        """
+
+        if len(strategy) == 0:
+            return set()
+
+        # Expression evaluations
+        if strategy['kind'] == 'And' or strategy['kind'] == 'Or':
+            return BotStrategy.extract_indicators(strategy['e1']) | BotStrategy.extract_indicators(strategy['e2'])
+
+        if strategy['kind'] == 'Not':
+            return BotStrategy.extract_indicators(strategy['e'])
+
+        indicators = set()
+
+        left = strategy['l']
+        right = strategy['r']
+
+        # TODO(jbartola): Add support for other indicators (bollinger band, macd, etc.)
+        if left['kind'] in {'sma', 'ema', 'rsi'}:
+            indicators.add('{}-{}'.format(left['kind'], left['period']))
+
+        if right['kind'] in {'sma', 'ema', 'rsi'}:
+            indicators.add('{}-{}'.format(right['kind'], right['period']))
+
+        return indicators
+
+    def run(self, tohlcv_matrix, capital):
         """
         Runs our strategy on a matrix of the most recent TOHLCV data
 
         Args:
             tohlcv_matrix (pandas.DataFrame): A dataframe containing TOHLCV + indicator data
+            capital (float): The amount of capital left our reserve
+        Returns:
+            ('BUY' | 'SELL', capital) if a buy or sell was executed according to the provided strategies, otherwise
+              returns None, None
         """
         import re
-
-        indicator_values = {}
 
         # First, updated all the indicator values in-place in the tohlcv matrix
         for indicator in self.indicators:
@@ -93,25 +126,25 @@ class BotStrategy(object):
                 period = int(indicator[indicator.find('-') + 1:])
 
                 sma_df = analysis.analyze_sma(tohlcv_matrix, period)
-                tohlcv_matrix[indicator] = sma_df[[indicator]]
+                tohlcv_matrix[indicator] = sma_df[indicator]
 
             # Exponential Moving Averages
             if re.fullmatch('ema-\d+', indicator):
                 period = int(indicator[indicator.find('-') + 1:])
 
                 ema_df = analysis.analyze_ema(tohlcv_matrix, period)
-                tohlcv_matrix[indicator] = ema_df[[indicator]]
+                tohlcv_matrix[indicator] = ema_df[indicator]
 
             # RSIs
             if re.fullmatch('rsi-\d+', indicator):
                 period = int(indicator[indicator.find('-') + 1:])
 
                 rsi_df = analysis.analyze_sma(tohlcv_matrix, period)
-                tohlcv_matrix[indicator] = rsi_df[[indicator]]
-
+                tohlcv_matrix[indicator] = rsi_df[indicator]
 
         lastrow = tohlcv_matrix.tail(1)
         current_price = lastrow['close'].item()
+        current_time = lastrow.index.item() // 10**9
 
         indicator_datum = {ind : lastrow[ind].item() for ind in self.indicators}
         decision = Decision({'currentprice': current_price, **indicator_datum})
@@ -119,20 +152,22 @@ class BotStrategy(object):
         if self.trade is None and decision.should_buy(self.buy_strategy):
 
             # Append the timestamp and the current price as a tuple
-            self.buys.append((lastrow.index.item() // 10**9, current_price))
-            new_trade = Trade(self.pair, current_price, self.reserve * (1 - self.trading_fee),
+            self.buys.append((current_time, current_price))
+            new_trade = Trade(self.pair, current_price, capital,
                               stop_loss=self.stop_loss)
             self.trade = new_trade
 
-        else:
+            return 'BUY', 0
 
-            if decision.should_sell(self.sell_strategy) or (self.stop_loss and current_price < self.trade.stop_loss):
-                self.sells.append((current_time, current_price))
-                profit, total = trade.close(current_price)
-                self.profit += profit * (1 - self.trading_fee)
-                self.reserve = total * (1 - self.trading_fee)
+        elif self.trade and (decision.should_sell(self.sell_strategy) or
+                             (self.stop_loss and current_price < self.trade.stop_loss)):
+            # Append the timestamp and the current price as a tuple
+            self.sells.append((current_time, current_price))
+            profit, total = self.trade.close(current_price)
+            self.trade = None
+            # self.profit += profit
+            # self.reserve = total
 
+            return 'SELL', total
 
-    def show_positions(self):
-        for trade in self.trades:
-            trade.show_trade()
+        return None, None

@@ -5,7 +5,7 @@ import {parse} from "./util/parser/parser";
 
 
 interface StrategyProps { buyQuery: string, sellQuery: string, updateConditions: (kind: ConditionType, newQuery: string) => void }
-interface StrategyState { buyParsed: boolean, sellParsed: boolean }
+interface StrategyState { buyParsed?: boolean, sellParsed?: boolean }
 
 
 /**
@@ -32,7 +32,7 @@ export class StrategyPane extends React.Component<StrategyProps, StrategyState> 
 
         // Don't show a success or failure icon if there is no text in the condition box
         if (!newValue) {
-            const newState = kind === ConditionType.BUY ? {buyParsed: null} : {sellParsed: null};
+            const newState = kind === ConditionType.BUY ? {buyParsed: undefined} : {sellParsed: undefined};
             this.setState({...newState});
             return;
         }
@@ -89,8 +89,11 @@ export class StrategyPane extends React.Component<StrategyProps, StrategyState> 
                             <i className={sellClass}></i>
                         </span>
                     </div>
-
                 </div>
+
+                {/*<div className="row">*/}
+                    {/*<a href="path_to_file" download="proposed_file_name">Download</a>*/}
+                {/*</div>*/}
             </div>
         );
     }

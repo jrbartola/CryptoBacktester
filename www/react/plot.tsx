@@ -47,8 +47,6 @@ export class Plot extends React.Component<PlotProps, PlotState> {
                            <Line type="linear" dataKey="buy" stroke="green" legendType="circle" dot={{ stroke: 'green', strokeWidth: 3 }} />
                            <Line type="linear" dataKey="sell" stroke="red" legendType="circle" dot={{ stroke: 'red', strokeWidth: 3 }} />
 
-                           {/*<Scatter data={this.props.backtestData} dataKey="buy" fill="green" activeDot={{r: 6}} />*/}
-                           {/*<Scatter data={this.props.backtestData} dataKey="sell" fill="red" activeDot={{r: 6}} />*/}
                           </ComposedChart>
                       </ResponsiveContainer>
                 </div>

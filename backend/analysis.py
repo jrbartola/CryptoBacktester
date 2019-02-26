@@ -61,12 +61,17 @@ def analyze_rsi(historial_data, period_count=14):
             indication.
     """
 
+    indicator_name = 'rsi-{}'.format(period_count)
+
     if type(historial_data) != pandas.core.frame.DataFrame:
         historial_data = convert_to_dataframe(historial_data)
 
     rsi_values = abstract.RSI(historial_data, period_count)
+    if indicator_name in historial_data:
+        historial_data.drop(indicator_name, 1, inplace=True)
+
     combined_data = pandas.concat([historial_data, rsi_values], axis=1)
-    combined_data.rename(columns={0: 'rsi-{}'.format(period_count)}, inplace=True)
+    combined_data.rename(columns={0: indicator_name}, inplace=True)
     return combined_data
 
 
@@ -82,12 +87,17 @@ def analyze_sma(historial_data, period_count=15):
             indication.
     """
 
+    indicator_name = 'sma-{}'.format(period_count)
+
     if type(historial_data) != pandas.core.frame.DataFrame:
         historial_data = convert_to_dataframe(historial_data)
 
     sma_values = abstract.SMA(historial_data, period_count)
+    if indicator_name in historial_data:
+        historial_data.drop(indicator_name, 1, inplace=True)
+
     combined_data = pandas.concat([historial_data, sma_values], axis=1)
-    combined_data.rename(columns={0: 'sma-{}'.format(period_count)}, inplace=True)
+    combined_data.rename(columns={0: indicator_name}, inplace=True)
     return combined_data
 
 
@@ -103,12 +113,17 @@ def analyze_ema(historial_data, period_count=15):
             indication.
     """
 
+    indicator_name = 'ema-{}'.format(period_count)
+
     if type(historial_data) != pandas.core.frame.DataFrame:
         historial_data = convert_to_dataframe(historial_data)
 
     ema_values = abstract.EMA(historial_data, period_count)
+    if indicator_name in historial_data:
+        historial_data.drop(indicator_name, 1, inplace=True)
+
     combined_data = pandas.concat([historial_data, ema_values], axis=1)
-    combined_data.rename(columns={0: 'ema-{}'.format(period_count)}, inplace=True)
+    combined_data.rename(columns={0: indicator_name}, inplace=True)
     return combined_data
 
 

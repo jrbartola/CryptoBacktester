@@ -1,7 +1,7 @@
 
 class Trade(object):
     def __init__(self, pair, current_price, amt_btc, uuid=None, stop_loss=None, client=None):
-        self.status = "OPEN"
+        self.status = 'open-unfilled'
         self.pair = pair
         self.entry_price = current_price
         self.exit_price = None
@@ -14,10 +14,52 @@ class Trade(object):
         else:
             self.stop_loss = None
 
-        print("Opened " + pair + " trade at " + str(self.entry_price) + ". Spent: " + str(amt_btc) + ", Amount:" + str(self.amount) + " " + pair.split('/')[0])
-    
+        if self.client:
+            resp = client.buy(self.pair, self.amount, limit=self.entry_price)
+
+            # If there was a message from the buy request, then the order couldn't be completed for some reason
+            if 'message' in resp:
+                raise RuntimeError(resp['message'])
+
+            self.uuid = resp['id']
+
+        print("Opened {} trade at {}. Spent: {} {}, Amount: {} {}".format(pair,
+                                                                          self.entry_price,
+                                                                          round(amt_btc, 8),
+                                                                          self.pair[4:],
+                                                                          round(self.amount, 8),
+                                                                          pair.split('-')[0]))
+
+    def tick(self):
+        """
+        Checks the CoinbasePro API to see if an open order has been filled
+        Returns:
+            True if the order is still open, False if it has been filled
+        """
+        # Only perform a tick check if we are live trading
+        if self.client is None:
+            return True
+
+        if self.status == 'open-unfilled':
+            order_resp = self.client.get_order(self.uuid)
+            self.status = 'open' if order_resp['status'] == 'done' else self.status
+        if self.status == 'closed-unfilled':
+            order_resp = self.client.get_order(self.uuid)
+            self.status = 'closed' if order_resp['status'] == 'done' else self.status
+
+        return self.status != 'open' and self.status != 'closed'
+
     def close(self, current_price):
-        self.status = "CLOSED"
+        if self.client:
+            resp = self.client.sell(self.pair, self.amount, limit=current_price)
+
+            # If there was a message from the sell request, then the order couldn't be completed for some reason
+            if 'message' in resp:
+                raise RuntimeError(resp['message'])
+
+            self.uuid = resp['id']
+            self.status = "closed-unfilled"
+
         self.exit_price = current_price
 
         btc_started = self.amount * self.entry_price
@@ -26,25 +68,12 @@ class Trade(object):
 
         message_type = "\033[92m" if profit > 0 else "\033[91m"
 
-        print(message_type + "Sold " + self.pair[:3] + " at " + str(self.exit_price) + ". Profit: " + str(profit) + ", Total BTC: " + str(btc_ended) + "\033[0m")
+        print(message_type + "Sold {} at {}. Profit: {}, Total {}: {} \033[0m".format(self.pair[:3],
+                                                                                      self.exit_price,
+                                                                                      round(profit, 8),
+                                                                                      self.pair[4:],
+                                                                                      round(btc_ended, 8)))
+
+        # SELL RESPONSE SAMPLE: {'id': '6ad607f2-8a21-4467-90ed-e21d3b46a449', 'price': '1000.00000000', 'size': '0.01000000', 'product_id': 'BTC-USD', 'side': 'sell', 'stp': 'dc', 'type': 'limit', 'time_in_force': 'GTC', 'post_only': False, 'created_at': '2019-02-26T05:58:18.758725Z', 'fill_fees': '0.0000000000000000', 'filled_size': '0.00000000', 'executed_value': '0.0000000000000000', 'status': 'pending', 'settled': False}
 
         return profit, btc_ended
-
-    def tick(self, current_price):
-        if self.stop_loss and current_price < self.stop_loss:
-            return self.close(current_price)
-        return None
-
-    def show_trade(self):
-        trade_status = "Entry Price: "+str(self.entry_price) + " Status: " + str(self.status) + " Exit Price: " + str(self.exit_price)
-
-        if self.status == "CLOSED":
-            trade_status = trade_status + " Profit: "
-            if self.exit_price > self.entry_price:
-                trade_status = trade_status + "\033[92m"
-            else:
-                trade_status = trade_status + "\033[91m"
-
-            trade_status = trade_status + str(self.exit_price - self.entry_price) + "\033[0m"
-
-        print(trade_status)
