@@ -27,8 +27,6 @@ def main(client, coin_pair, buy_strategy, sell_strategy, starting_capital, time_
 
         print("({}): {}".format(timestamp, last_row['close'].item()))
 
-        open_order = strategy.trade.tick()
-
         # Check the open order to see if we can run the strategy yet. If not, skip the strategy and wait again
         if not open_order:
             trade_type, remaining_capital = strategy.run(hist_data, capital)

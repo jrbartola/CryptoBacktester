@@ -72,7 +72,6 @@ class BotStrategy(object):
         self.buy_strategy = buy_strategy
         self.sell_strategy = sell_strategy
         self.stop_loss = stop_loss
-        self.trade = None
 
     @staticmethod
     def extract_indicators(strategy):
@@ -105,7 +104,7 @@ class BotStrategy(object):
 
         return indicators
 
-    def run(self, tohlcv_matrix, capital):
+    def run(self, tohlcv_matrix, capital, trade):
         """
         Runs our strategy on a matrix of the most recent TOHLCV data
 
@@ -149,25 +148,22 @@ class BotStrategy(object):
         indicator_datum = {ind : lastrow[ind].item() for ind in self.indicators}
         decision = Decision({'currentprice': current_price, **indicator_datum})
 
-        if self.trade is None and decision.should_buy(self.buy_strategy):
+        if trade is None and decision.should_buy(self.buy_strategy):
 
             # Append the timestamp and the current price as a tuple
             self.buys.append((current_time, current_price))
-            new_trade = Trade(self.pair, current_price, capital,
-                              stop_loss=self.stop_loss)
-            self.trade = new_trade
+            return Trade(self.pair, current_price, capital,
+                         stop_loss=self.stop_loss), 'BUY'
 
-            return 'BUY', 0
+        elif trade:
+            if trade.can_sell() and (decision.should_sell(self.sell_strategy) or
+                             (self.stop_loss and current_price < trade.stop_loss)):
+                # Append the timestamp and the current price as a tuple
+                self.sells.append((current_time, current_price))
+                trade.close(current_price)
+                return trade, 'SELL'
 
-        elif self.trade and (decision.should_sell(self.sell_strategy) or
-                             (self.stop_loss and current_price < self.trade.stop_loss)):
-            # Append the timestamp and the current price as a tuple
-            self.sells.append((current_time, current_price))
-            profit, total = self.trade.close(current_price)
-            self.trade = None
-            # self.profit += profit
-            # self.reserve = total
+            elif trade
 
-            return 'SELL', total
 
-        return None, None
+        return trade, None
