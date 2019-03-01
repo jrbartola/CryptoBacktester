@@ -1,7 +1,7 @@
 # CryptoBacktester
 A backtesting engine for testing trading strategies over GDAX (Coinbase Pro) marketplace data
 
-![Alt text](/cryptobot.jpg "The dashboard")
+![Alt text](/backtester.png "The dashboard")
 
 This tool allows you to try different strategies over sets of historical trading data.
 
