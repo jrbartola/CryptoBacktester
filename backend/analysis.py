@@ -1,7 +1,6 @@
 """Executes the trading strategies and analyzes the results.
 """
 
-import math
 from datetime import datetime
 
 import pandas
@@ -40,8 +39,8 @@ def analyze_macd(historial_data):
     Args:
         historial_data (list): A matrix of historical OHCLV data.
     Returns:
-        dict: A dictionary containing a tuple of indicator values and booleans for buy / sell
-            indication.
+        pandas.DataFrame: The original OHCLV dataframe with an appended column corresponding to the MACD
+          indicator values for each timestamp
     """
 
     if type(historial_data) != pandas.core.frame.DataFrame:
@@ -57,8 +56,8 @@ def analyze_rsi(historial_data, period_count=14):
         period_count (int, optional): Defaults to 14. The number of data points to consider for
             our simple moving average.
     Returns:
-        dict: A dictionary containing a tuple of indicator values and booleans for buy / sell
-            indication.
+        pandas.DataFrame: The original OHCLV dataframe with an appended column corresponding to the RSI
+          indicator values for each timestamp
     """
 
     indicator_name = 'rsi-{}'.format(period_count)
@@ -83,8 +82,8 @@ def analyze_sma(historial_data, period_count=15):
         period_count (int, optional): Defaults to 15. The number of data points to consider for
             our simple moving average.
     Returns:
-        dict: A dictionary containing a tuple of indicator values and booleans for buy / sell
-            indication.
+        pandas.DataFrame: The original OHCLV dataframe with an appended column corresponding to the SMA
+          indicator values for each timestamp
     """
 
     indicator_name = 'sma-{}'.format(period_count)
@@ -109,8 +108,8 @@ def analyze_ema(historial_data, period_count=15):
         period_count (int, optional): Defaults to 15. The number of data points to consider for
             our exponential moving average.
     Returns:
-        dict: A dictionary containing a tuple of indicator values and booleans for buy / sell
-            indication.
+        pandas.DataFrame: The original OHCLV dataframe with an appended column corresponding to the EMA
+          indicator values for each timestamp
     """
 
     indicator_name = 'ema-{}'.format(period_count)
@@ -135,8 +134,8 @@ def analyze_bollinger_bands(historial_data, period_count=21):
         period_count (int, optional): Defaults to 21. The number of data points to consider for
             our bollinger bands
     Returns:
-        dict: A dictionary containing a tuple of indicator values and booleans for buy / sell
-            indication.
+        pandas.DataFrame: The original OHCLV dataframe with 3 appended columns corresponding to the Bollinger Band
+          indicator values for each timestamp
     """
 
     if type(historial_data) != pandas.core.frame.DataFrame:
