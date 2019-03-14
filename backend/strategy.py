@@ -63,8 +63,9 @@ class BacktestingStrategy(object):
 
 
 class BotStrategy(object):
-    def __init__(self, coin_pair, buy_strategy, sell_strategy, stop_loss=None):
+    def __init__(self, client, coin_pair, buy_strategy, sell_strategy, stop_loss=None):
 
+        self.client = client
         self.pair = coin_pair
         self.buys = []
         self.sells = []
@@ -105,6 +106,7 @@ class BotStrategy(object):
 
         return indicators
 
+
     def run(self, tohlcv_matrix, capital):
         """
         Runs our strategy on a matrix of the most recent TOHLCV data
@@ -113,8 +115,7 @@ class BotStrategy(object):
             tohlcv_matrix (pandas.DataFrame): A dataframe containing TOHLCV + indicator data
             capital (float): The amount of capital left our reserve
         Returns:
-            ('BUY' | 'SELL', capital) if a buy or sell was executed according to the provided strategies, otherwise
-              returns None, None
+            float: The capital remaining after the current iteration of the strategy
         """
         import re
 
@@ -149,25 +150,31 @@ class BotStrategy(object):
         indicator_datum = {ind : lastrow[ind].item() for ind in self.indicators}
         decision = Decision({'currentprice': current_price, **indicator_datum})
 
+        # STATE 1 (Open a buy order)
         if self.trade is None and decision.should_buy(self.buy_strategy):
 
             # Append the timestamp and the current price as a tuple
             self.buys.append((current_time, current_price))
             new_trade = Trade(self.pair, current_price, capital,
-                              stop_loss=self.stop_loss)
+                              stop_loss=self.stop_loss, client=self.client)
             self.trade = new_trade
 
-            return 'BUY', 0
+        elif self.trade:
 
-        elif self.trade and (decision.should_sell(self.sell_strategy) or
-                             (self.stop_loss and current_price < self.trade.stop_loss)):
-            # Append the timestamp and the current price as a tuple
-            self.sells.append((current_time, current_price))
-            profit, total = self.trade.close(current_price)
-            self.trade = None
-            # self.profit += profit
-            # self.reserve = total
+            if not self.trade.order_is_open():
+                logger.log()
 
-            return 'SELL', total
 
-        return None, None
+            # STATE 3 (Open a sell order)
+            elif decision.should_sell(self.sell_strategy or self.stop_loss and current_price < self.trade.stop_loss):
+                # Append the timestamp and the current price as a tuple
+                self.sells.append((current_time, current_price))
+                profit, total = self.trade.close(current_price)
+
+            else:
+                # STATE 2 and 4 (Buy/Sell order is filled)
+                self.trade.check_order()
+
+                # STATE 4 (Sell order was filled)
+                if self.trade.status == 'closed':
+                    self.trade = None

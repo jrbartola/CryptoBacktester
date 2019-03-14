@@ -1,3 +1,4 @@
+import logger
 
 class Trade(object):
     def __init__(self, pair, current_price, amt_btc, uuid=None, stop_loss=None, client=None):
@@ -5,9 +6,10 @@ class Trade(object):
         self.pair = pair
         self.entry_price = current_price
         self.exit_price = None
-        self.amount = amt_btc / current_price
+        self.amount = round(amt_btc / current_price, 8)
         self.client = client
         self.uuid = uuid
+        self.profit = 0
 
         if stop_loss:
             self.stop_loss = current_price * (1 - stop_loss)
@@ -23,14 +25,14 @@ class Trade(object):
 
             self.uuid = resp['id']
 
-        print("Opened {} trade at {}. Spent: {} {}, Amount: {} {}".format(pair,
+        logger.log("Opened {} trade at {}. Spent: {} {}, Amount: {} {}".format(pair,
                                                                           self.entry_price,
                                                                           round(amt_btc, 8),
                                                                           self.pair[4:],
-                                                                          round(self.amount, 8),
+                                                                          self.amount,
                                                                           pair.split('-')[0]))
 
-    def tick(self):
+    def order_is_open(self):
         """
         Checks the CoinbasePro API to see if an open order has been filled
         Returns:
@@ -38,14 +40,14 @@ class Trade(object):
         """
         # Only perform a tick check if we are live trading
         if self.client is None:
-            return True
+            return False
 
-        if self.status == 'open-unfilled':
-            order_resp = self.client.get_order(self.uuid)
-            self.status = 'open' if order_resp['status'] == 'done' else self.status
-        if self.status == 'closed-unfilled':
-            order_resp = self.client.get_order(self.uuid)
-            self.status = 'closed' if order_resp['status'] == 'done' else self.status
+        if self.status == 'open-unfilled' and self.client.get_order(self.uuid)['status'] == 'done':
+            self.status = 'open'
+            logger.log("Open buy order was filled.")
+        if self.status == 'closed-unfilled' and self.client.get_order(self.uuid)['status'] == 'done':
+            self.status = 'closed'
+            logger.log("Open sell order was filled.")
 
         return self.status != 'open' and self.status != 'closed'
 
@@ -64,13 +66,13 @@ class Trade(object):
 
         btc_started = self.amount * self.entry_price
         btc_ended = self.amount * self.exit_price
-        profit = btc_ended - btc_started
+        self.profit = btc_ended - btc_started
 
-        message_type = "\033[92m" if profit > 0 else "\033[91m"
+        message_type = "success" if self.profit > 0 else "error"
 
-        print(message_type + "Sold {} at {}. Profit: {}, Total {}: {} \033[0m".format(self.pair[:3],
+        logger.log(message_type + "Sold {} at {}. Profit: {}, Total {}: {}".format(self.pair[:3],
                                                                                       self.exit_price,
-                                                                                      round(profit, 8),
+                                                                                      round(self.profit, 8),
                                                                                       self.pair[4:],
                                                                                       round(btc_ended, 8)))
 
