@@ -1,5 +1,7 @@
 import cbpro
 
+from analysis import convert_to_dataframe
+
 
 class Exchange(object):
     def __init__(self, api_key=None, api_secret=None, password=None):
@@ -9,8 +11,19 @@ class Exchange(object):
             self.client = cbpro.PublicClient()
 
     def get_historical_data(self, coin_pair, interval=3600):
+        """
+        Retrieve the historical data for a given coin pair over the specified time interval
+        Args:
+            coin_pair (str): The coin pair to fetch data for
+            interval (int): The interval of time (in seconds) between successive datapoints
+        Returns:
+            pandas.DataFrame: A dataframe containing the corresponding OHLCV data
+        """
+
         # Candlesticks need to be returned in reverse order (GDAX gives us most recent data first)
-        return self.client.get_product_historic_rates(coin_pair, granularity=interval)[::-1]
+        return convert_to_dataframe(
+            self.client.get_product_historic_rates(coin_pair, granularity=interval)[::-1]
+        )
 
     def get_available_keypairs(self):
         return [product['display_name'] for product in self.client.get_products()]
