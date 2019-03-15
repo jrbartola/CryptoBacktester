@@ -103,7 +103,7 @@ class Chart(object):
             decision = Decision({'currentprice': current_price, **indicator_datum})
 
             # Check to see if we can open a position
-            if not trade and decision.should_buy(buy_strategy):
+            if not trade and decision.should_execute(buy_strategy):
                 self.data.at[date_index, 'buy'] = True
                 trade = Trade(self.pair, current_price, reserve * (1 - trading_fee))
                 reserve = 0
@@ -114,9 +114,8 @@ class Chart(object):
                 profit = current_price * trade.amount_base - trade.entry_price * trade.amount_base
                 self.data.at[date_index, 'profit'] = profit
 
-                if decision.should_sell(sell_strategy) or (stop_loss and current_price < trade.entry_price * (1 - stop_loss)):
+                if decision.should_execute(sell_strategy) or (stop_loss and current_price < trade.entry_price * (1 - stop_loss)):
                     self.data.at[date_index, 'sell'] = True
                     reserve = current_price * trade.amount_base * (1 - trading_fee)
                     trade.close(current_price)
                     trade = None
-
