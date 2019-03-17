@@ -25,7 +25,7 @@ export class Plot extends React.Component<PlotProps, PlotState> {
         const randomColor = [...Array(6).keys()]
             .map(_ => alphabet[Math.floor(Math.random() * 16)]).join('');
 
-        return <Line key={indicator} type="linear" name={indicator} dataKey={"indicators." + indicator}
+        return <Line key={indicator} type="linear" name={indicator} dataKey={indicator}
                      stroke={'#' + randomColor} strokeWidth={2} dot={false} />
     }
 
