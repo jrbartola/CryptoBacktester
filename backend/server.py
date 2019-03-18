@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify, render_template
 import traceback
 
-from backtest import Backtester
+from util import period_to_integer, serialize_ohlcv
 from exchange import Exchange
+from chart import Chart
 
 
 """
@@ -17,7 +18,7 @@ class Server(object):
                 making exchange queries.
         """
 
-        self.exchange_interface = exchange_interface
+        self.exchange = exchange_interface
 
         self.app = Flask(__name__, static_folder='../www/static', template_folder='../www/static/templates')
         self.__add_backtesting_endpoints()
@@ -28,7 +29,7 @@ class Server(object):
             return render_template("index.html")
 
         def pairs_action():
-            pairs = self.exchange_interface.get_available_keypairs()
+            pairs = self.exchange.get_available_keypairs()
             return jsonify(response=200, result=pairs)
 
         def backtesting_action():
@@ -47,16 +48,16 @@ class Server(object):
             sell_strategy = json.loads(post_data['sellStrategy'])
 
             try:
-                backtester = Backtester(coin_pair, period_length, self.exchange_interface, capital, stop_loss,
-                                        buy_strategy, sell_strategy, start_time, indicators)
-                backtester.run()
-                result = backtester.get_results()
+                ohlcv_matrix = self.exchange.get_historical_data(coin_pair, interval=period_to_integer(period_length))
+                chart = Chart(coin_pair, ohlcv_matrix, indicators)
+                chart.run_backtest(capital, buy_strategy, sell_strategy, trading_fee=0.003, stop_loss=stop_loss)
+
+                result = serialize_ohlcv(chart.get_data(start_time=start_time))
 
                 return jsonify(response=200, result=result)
 
             except Exception as e:
-
-                # Return the exception message if the selected exchange encounters an error while fetching historical data
+                # Return the exception message if the exchange encounters an error while fetching historical data
                 return jsonify(response=500, result={'message': str(e), 'stack_trace': traceback.format_exc()})
 
         self.add_endpoint(endpoint='/', endpoint_name='index', handler=index_action)
@@ -79,6 +80,7 @@ class EndpointAction(object):
 
     def __call__(self, *args):
         return self.action()
+
 
 if __name__ == '__main__':
     exchange = Exchange()

@@ -15,98 +15,50 @@ class Decision(object):
         # TODO(jbartola): Add support for bollinger bands and macd
         return self.indicators['{}-{}'.format(indicator['kind'], indicator['period'])]
 
-    def should_buy(self, buy_strategy):
+    def should_execute(self, strategy):
         """
-        Determines if we should buy given our buy strategies and our observed indicators
+        Determines if we should execute a given strategy based on our observed indicators
 
         Args:
-            buy_strategy: A parsed Expression object containing the buy conditions for the given decision
+            strategy: A parsed Expression object containing the conditions for a buy/sell strategy
 
         Returns:
             True iff each indicator satisfies a comparision using it's 'comparator' value with its 'value' value. False otherwise
         """
 
-        if len(buy_strategy) == 0:
+        if len(strategy) == 0:
             return True
 
         # Expression evaluations
-        if buy_strategy['kind'] == 'And':
-            return self.should_buy(buy_strategy['e1']) and self.should_buy(buy_strategy['e2'])
+        if strategy['kind'] == 'And':
+            return self.should_execute(strategy['e1']) and self.should_execute(strategy['e2'])
 
-        if buy_strategy['kind'] == 'Or':
-            return self.should_buy(buy_strategy['e1']) or self.should_buy(buy_strategy['e2'])
+        if strategy['kind'] == 'Or':
+            return self.should_execute(strategy['e1']) or self.should_execute(strategy['e2'])
 
-        if buy_strategy['kind'] == 'Not':
-            return not self.should_buy(buy_strategy['e'])
+        if strategy['kind'] == 'Not':
+            return not self.should_execute(strategy['e'])
 
         # Indicator evaluations
-        lv = self.get_indicator_value(buy_strategy['l'])
-        rv = self.get_indicator_value(buy_strategy['r'])
+        lv = self.get_indicator_value(strategy['l'])
+        rv = self.get_indicator_value(strategy['r'])
 
         if lv is None or rv is None:
             return False
 
-        if buy_strategy['kind'] == 'Eq':
+        if strategy['kind'] == 'Eq':
             return lv == rv
 
-        if buy_strategy['kind'] == 'LT':
+        if strategy['kind'] == 'LT':
             return lv < rv
 
-        if buy_strategy['kind'] == 'LEq':
+        if strategy['kind'] == 'LEq':
             return lv <= rv
 
-        if buy_strategy['kind'] == 'GT':
+        if strategy['kind'] == 'GT':
             return lv > rv
 
-        if buy_strategy['kind'] == 'GEQ':
-            return lv >= rv
-
-        return False
-
-    def should_sell(self, sell_strategy):
-        """
-        Determines if we should sell given our sell strategies and our observed indicators
-
-        Args:
-            sell_strategy: A parsed Expression object containing the sell conditions for the given decision
-
-        Returns:
-             True iff each indicator satisfies a comparision using it's 'comparator' value with its 'value' value. False otherwise
-        """
-
-        if len(sell_strategy) == 0:
-            return True
-
-        # Expression evaluations
-        if sell_strategy['kind'] == 'And':
-            return self.should_buy(sell_strategy['e1']) and self.should_buy(sell_strategy['e2'])
-
-        if sell_strategy['kind'] == 'Or':
-            return self.should_buy(sell_strategy['e1']) or self.should_buy(sell_strategy['e2'])
-
-        if sell_strategy['kind'] == 'Not':
-            return not self.should_buy(sell_strategy['e'])
-
-        # Indicator evaluations
-        lv = self.get_indicator_value(sell_strategy['l'])
-        rv = self.get_indicator_value(sell_strategy['r'])
-
-        if lv is None or rv is None:
-            return False
-
-        if sell_strategy['kind'] == 'Eq':
-            return lv == rv
-
-        if sell_strategy['kind'] == 'LT':
-            return lv < rv
-
-        if sell_strategy['kind'] == 'LEq':
-            return lv <= rv
-
-        if sell_strategy['kind'] == 'GT':
-            return lv > rv
-
-        if sell_strategy['kind'] == 'GEQ':
+        if strategy['kind'] == 'GEQ':
             return lv >= rv
 
         return False

@@ -73,10 +73,12 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
 
             const result = resp["result"];
             const backtestData = this.mapBacktestResponse(result);
+            const profitDatum = backtestData.reverse().find(d => d['profit'] !== 0);
+            const profit = profitDatum ? profitDatum['profit'] : 0;
 
             this.setState({
                 backtestData: backtestData,
-                profit: result["profit"]
+                profit: Math.round(profit * 1e8) / 1e8;
             });
         }).catch(errResp => {
             Swal("Uh oh!", "Something went wrong: " + "<br/><strong>Error Message:</strong> \"" + errResp + "\"", "error");
@@ -89,33 +91,11 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
      *
      * @param {object} result: The response obtained from the backtesting API
      */
-    private mapBacktestResponse(result: object): BacktestData[] {
-        // Create a mapping from timestamp to closing price, indicators, buys, and sells
-	    let timeMap = new Map<number, object>();
-	    result["closingPrices"].forEach(([time, price]) => {
-	        timeMap.set(time, {close: price});
-        });
-
-	    result["buys"].forEach(([time, price]) => {
-	        timeMap.set(time, {...timeMap.get(time), buy: price})
-        });
-
-        result["sells"].forEach(([time, price]) => {
-	        timeMap.set(time, {...timeMap.get(time), sell: price})
-        });
-
-        Object.keys(result["indicators"]).forEach(indicator => {
-            result["indicators"][indicator].forEach(([time, value]) => {
-                // Make sure we only include indicators for which we have corresponding closing times
-                if (timeMap.has(time)) {
-                    const indicators = timeMap.get(time)["indicators"] || {};
-                    timeMap.set(time, {...timeMap.get(time), indicators: {...indicators, [indicator]: value}});
-                }
-            });
-        });
-
-        return [...timeMap.entries()].map(([time, data]) =>  {
-            return {close: 0, ...data, time: time*1000} as BacktestData;
+    private mapBacktestResponse(result: object[]): BacktestData[] {
+        return result.map(datum =>  {
+            return {...datum, buy: datum['buy'] ? datum['close'] : null,
+                              sell: datum['sell'] ? datum['close'] : null,
+                              time: datum['time'] * 1000} as BacktestData
         }).sort((a, b) => a.time < b.time ? -1 : 1);
     }
 

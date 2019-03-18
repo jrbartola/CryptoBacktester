@@ -1,125 +1,121 @@
 import analysis
-from candlestick import Candlestick
+from trade import Trade
+from decision import Decision
+from util import epoch_to_str
 
-"""
-A Chart class encompassing functionality for a set of historical data in a time-series domain
-"""
+
 class Chart(object):
-    def __init__(self, pair, period, exchange_interface):
+    """
+    A Chart class encompassing functionality for a set of historical data in a time-series domain. Contains functionality
+    for backtesting various strategies over historical data
+    """
+    def __init__(self, coin_pair, ohlcv_matrix, indicators):
 
-        self.pair = pair
-        self.data = []
+        self.pair = coin_pair
+        self.data = ohlcv_matrix
 
-        # Query the data to fill our chart truncate it to 'length' elements
-        raw_data = exchange_interface.get_historical_data(pair, interval=Chart.period_to_integer(period))
+        # Append the indicators to our OHLCV matrix
+        self.__add_indicators(indicators)
 
-        for datum in raw_data:
-            stick = Candlestick(time=datum[0],
-                                open=datum[1],
-                                high=datum[2],
-                                low=datum[3],
-                                close=datum[4],
-                                price_average=(datum[2] + datum[3])/2.)
-            self.data.append(stick)
-
-    def get_points(self, start_time=None):
+    def get_data(self, start_time=None):
         """
-        Retrieve all candlesticks from the chart. If a start time is specified, then we return candlesticks only
-        from that time onward. By default we return all candlesticks
+        Retrieve all OHLCV data from the chart. If a start time is specified, then we return data only
+        from that time onward. By default we return all data
 
         Args:
             start_time (int): Defaults to None. Otherwise is an integer denoting the starting time in epoch seconds
                 that our candles will be returned from
-
         Returns:
             list[Candlestick]: A list of candlestick objects
         """
         if start_time:
-            return [stick for stick in self.data if stick.time >= start_time]
+            return self.data.loc[epoch_to_str(start_time):]
 
         return self.data
 
-    @staticmethod
-    def period_to_integer(period):
+    def __add_indicators(self, indicators):
         """
-        Converts a period string into a integer
-        Args:
-            period (str): A string denoting the period of time each candlestick represents (i.e., '15m')
-        Returns:
-            int: An integer denoting the period of time in seconds
-        """
-
-        import re
-
-        try:
-            num_units = re.findall(r'\d+', period)[0]
-            unit_type = period[len(num_units):]
-            if unit_type == 'm':
-                return 60 * int(num_units)
-            if unit_type == 'h':
-                return 60 * 60 * int(num_units)
-            if unit_type == 'd':
-                return 24 * 60 * 60 * int(num_units)
-
-        except IndexError:
-            raise ValueError("`Period` string should contain a character prefixed with an integer")
-
-    def get_indicators(self, indicators, start_time):
-        """
-        Returns the indicators specified in the input list as a json-serializable dictionary
+        Updates the OHLCV dataframe with the indicators specified in the input list
 
         Args:
             indicators (list[str]): A list of strings where each string is a JSON representation of an indicator
-            start_time (int): The earliest data point to consider, in epoch milliseconds
-        Returns:
-            dict[str, -]: A response dictionary mapping JSON indicator names to their data points
         """
         import re
-
-        start_time = start_time if start_time else 0
-        response = {}
-
-        # Get closing historical datapoints
-        closings = [[x.time, 0, 0, 0, x.close, 0] for x in self.get_points(start_time)]
 
         for indicator in indicators:
 
             # Simple Moving Averages
             if re.fullmatch('sma-\d+', indicator):
                 period = int(indicator[indicator.find('-') + 1:])
-                sma_datapoints = analysis.analyze_sma(closings, period_count=period)[indicator][period:]
-
-                response[indicator] = [(closings[i][0], None) for i in range(period)] + \
-                                      [(closings[i + period-1][0], datum) for i, datum in enumerate(sma_datapoints)]
+                self.data = analysis.analyze_sma(self.data, period_count=period)
 
             # Exponential Moving Averages
             if re.fullmatch('ema-\d+', indicator):
                 period = int(indicator[indicator.find('-') + 1:])
-                ema_datapoints = analysis.analyze_ema(closings, period_count=period)[indicator][period:]
-
-                response[indicator] = [(closings[i][0], None) for i in range(period)] + \
-                                      [(closings[i + period - 1][0], datum) for i, datum in
-                                       enumerate(ema_datapoints)]
+                self.data = analysis.analyze_ema(self.data, period_count=period)
 
             # RSIs
             if re.fullmatch('rsi-\d+', indicator):
                 period = int(indicator[indicator.find('-') + 1:])
-                rsi_datapoints = analysis.analyze_rsi(closings, period_count=period)[indicator][period:]
-
-                response[indicator] = [(closings[i][0], None) for i in range(period)] + \
-                                      [(closings[i + period - 1][0], datum) for i, datum in enumerate(rsi_datapoints)]
+                self.data = analysis.analyze_rsi(self.data, period_count=period)
 
             # Bollinger Bands
             if re.fullmatch('bollinger-\d+-\d+', indicator):
                 period, std_dev = [int(m) for m in re.findall('\d+', indicator)]
 
-                # Offset each band by "period" data points
-                bbupper = [(closings[i][0], datum) for i, datum in
-                           enumerate(analysis.analyze_bollinger_bands(closings))]
-                bblower = [(closings[i][0], datum) for i, datum in
-                           enumerate(analysis.analyze_bollinger_bands(closings))]
+                self.data = analysis.analyze_bollinger_bands(self.data, period_count=period)
 
-                response['bollinger_upper'] = bbupper
-                response['bollinger_lower'] = bblower
+        self.data = self.data.where(self.data.notnull(), None)
 
-        return response
+    def run_backtest(self, capital, buy_strategy, sell_strategy, trading_fee=0, stop_loss=0):
+        """
+        Runs our backtesting strategy on the set of candlestick data
+
+        Args:
+            self.data (pandas.DataFrame): A dataframe consisting of OHLCV + indicator data
+            capital (float): The starting capital of the quote currency
+            buy_strategy (dict[-, -]): A dictionary containing a buy strategy as specified by the parser documentation
+            sell_strategy (dict[-, -]): A dictionary containing a sell strategy as specified by the parser documentation
+            trading_fee (float | 0): The trading fee per market order. Defaults to 0
+            stop_loss (float | 0): The amount of quote currency below our buy point at which to sell an open position
+        Returns:
+            dict[str, -]: A dictionary mapping data to a dictionary representation of the dataframe and the profit to the
+              resulting profit from the backtest
+        """
+
+        reserve = capital
+        trade: Trade = None
+
+        # First append a buy, sell and profit column to our dataframe (with default value False)
+        self.data.insert(len(self.data.columns), 'buy', False)
+        self.data.insert(len(self.data.columns), 'sell', False)
+
+        # Add the profit column (with default value 0)
+        self.data.insert(len(self.data.columns), 'profit', 0)
+
+        # Run our strategy on each data point in the matrix
+        for date_index, row in self.data.iterrows():
+
+            current_price = row['close']
+
+            # All the indicator fields are placed after the 5 columns of OHLCV (and before buy, sell, profit) data
+            indicator_datum = {ind: row[ind] for ind in row.index[5:-3]}
+            decision = Decision({'currentprice': current_price, **indicator_datum})
+
+            # Check to see if we can open a position
+            if not trade and decision.should_execute(buy_strategy):
+                self.data.loc[date_index, 'buy'] = True
+                trade = Trade(self.pair, current_price, reserve * (1 - trading_fee))
+                reserve = 0
+
+            # Check to see if we can sell our position or if we hit a stop loss
+            elif trade:
+
+                profit = current_price * trade.amount_base - capital
+                self.data.loc[date_index, 'profit'] = profit
+
+                if decision.should_execute(sell_strategy) or (stop_loss and current_price < trade.entry_price * (1 - stop_loss)):
+                    self.data.loc[date_index, 'sell'] = True
+                    reserve = current_price * trade.amount_base * (1 - trading_fee)
+                    trade.close(current_price)
+                    trade = None
