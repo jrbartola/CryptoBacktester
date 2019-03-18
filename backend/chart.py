@@ -104,18 +104,18 @@ class Chart(object):
 
             # Check to see if we can open a position
             if not trade and decision.should_execute(buy_strategy):
-                self.data.at[date_index, 'buy'] = True
+                self.data.loc[date_index, 'buy'] = True
                 trade = Trade(self.pair, current_price, reserve * (1 - trading_fee))
                 reserve = 0
 
             # Check to see if we can sell our position or if we hit a stop loss
             elif trade:
 
-                profit = current_price * trade.amount_base - trade.entry_price * trade.amount_base
-                self.data.at[date_index, 'profit'] = profit
+                profit = current_price * trade.amount_base - capital
+                self.data.loc[date_index, 'profit'] = profit
 
                 if decision.should_execute(sell_strategy) or (stop_loss and current_price < trade.entry_price * (1 - stop_loss)):
-                    self.data.at[date_index, 'sell'] = True
+                    self.data.loc[date_index, 'sell'] = True
                     reserve = current_price * trade.amount_base * (1 - trading_fee)
                     trade.close(current_price)
                     trade = None

@@ -31,9 +31,9 @@ class Trade(object):
         profit = btc_ended - btc_started
 
         message_type = "success" if profit > 0 else "error"
-        logger.log(message_type + "Sold {} at {}. Profit: {}, Total {}: {}".format(self.pair[:3],
+        logger.log("Sold {} at {}. Profit: {}, Total {}: {}".format(self.pair[:3],
                                                                                    self.exit_price,
                                                                                    round(profit, 8),
                                                                                    self.pair[4:],
-                                                                                   round(btc_ended, 8)))
+                                                                                   round(btc_ended, 8)), type=message_type)
 

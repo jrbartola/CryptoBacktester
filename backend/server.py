@@ -50,7 +50,7 @@ class Server(object):
             try:
                 ohlcv_matrix = self.exchange.get_historical_data(coin_pair, interval=period_to_integer(period_length))
                 chart = Chart(coin_pair, ohlcv_matrix, indicators)
-                chart.run_backtest(capital, buy_strategy, sell_strategy, trading_fee=0.03, stop_loss=stop_loss)
+                chart.run_backtest(capital, buy_strategy, sell_strategy, trading_fee=0.003, stop_loss=stop_loss)
 
                 result = serialize_ohlcv(chart.get_data(start_time=start_time))
 
