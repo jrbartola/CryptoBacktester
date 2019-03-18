@@ -73,10 +73,12 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
 
             const result = resp["result"];
             const backtestData = this.mapBacktestResponse(result);
+            const profitDatum = backtestData.reverse().find(d => d['profit'] !== 0);
+            const profit = profitDatum ? profitDatum['profit'] : 0;
 
             this.setState({
                 backtestData: backtestData,
-                profit: result["profit"]
+                profit: Math.round(profit * 1e8) / 1e8;
             });
         }).catch(errResp => {
             Swal("Uh oh!", "Something went wrong: " + "<br/><strong>Error Message:</strong> \"" + errResp + "\"", "error");
@@ -92,7 +94,8 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
     private mapBacktestResponse(result: object[]): BacktestData[] {
         return result.map(datum =>  {
             return {...datum, buy: datum['buy'] ? datum['close'] : null,
-                              sell: datum['sell'] ? datum['close'] : null} as BacktestData
+                              sell: datum['sell'] ? datum['close'] : null,
+                              time: datum['time'] * 1000} as BacktestData
         }).sort((a, b) => a.time < b.time ? -1 : 1);
     }
 
