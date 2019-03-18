@@ -71,8 +71,7 @@ export class Dashboard extends React.Component<DashboardProps, DashboardState> {
                 throw new Error(`Error occurred while fetching backtest results: ${resp["result"]["message"]}`);
             }
 
-            const result = resp["result"];
-            const backtestData = this.mapBacktestResponse(result);
+            const backtestData = this.mapBacktestResponse(resp['result']);
             const profitDatum = backtestData.reverse().find(d => d['profit'] !== 0);
             const profit = profitDatum ? profitDatum['profit'] : 0;
 
